@@ -1,6 +1,6 @@
 ---
-name: ✨ 기능 개발
-about: 새로운 기능을 개발합니다
+name: ✨ Feature
+about: 새로운 기능 추가 요청을 위한 템플릿
 title: '[Feat] '
 labels: enhancement
 ---

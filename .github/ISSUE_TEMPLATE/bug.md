@@ -1,6 +1,6 @@
 ---
-name: 🐛 버그 리포트
-about: 버그를 제보합니다
+name: 🐞 Bug
+about: 버그를 등록하고 수정 작업을 관리합니다.
 title: '[Bug] '
 labels: bug
 ---
