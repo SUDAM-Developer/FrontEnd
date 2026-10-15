@@ -1,7 +1,7 @@
 ---
 name: ✨ Feature
 about: 새로운 기능 추가 요청을 위한 템플릿
-title: '[Feat] '
+title: '[FEAT] '
 labels: enhancement
 ---
 
