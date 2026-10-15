@@ -1,0 +1,6 @@
+/*
+ * Figma 텍스트 스타일을 Tailwind 유틸리티로 등록합니다.
+ * 디자인 확정 후 추가합니다.
+ * 예: @utility typography-title-bold { font-size: 24px; font-weight: 700; line-height: 1.4; }
+ *     →  className="typography-title-bold"
+ */

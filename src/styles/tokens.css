@@ -1,0 +1,7 @@
+/*
+ * Figma 디자인 시스템 토큰
+ * 디자인 확정 후 색상, 폰트, 여백 값을 등록합니다.
+ * 예: --color-primary-500: #5307b0;  →  className="bg-primary-500"
+ */
+@theme {
+}
