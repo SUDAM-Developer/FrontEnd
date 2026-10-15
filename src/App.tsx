@@ -1,7 +1,10 @@
+import { Outlet } from 'react-router';
+
+// 모든 페이지를 감싸는 공통 레이아웃
 function App() {
   return (
-    <main className="flex min-h-dvh items-center justify-center">
-      <h1 className="text-3xl font-bold">SUDAM</h1>
+    <main className="min-h-dvh">
+      <Outlet />
     </main>
   );
 }
