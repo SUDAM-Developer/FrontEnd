@@ -27,3 +27,10 @@ dist-ssr
 # env
 .env*
 !.env.example
+
+# Expo generated files
+.expo/
+expo-env.d.ts
+web-build/
+ios/
+android/

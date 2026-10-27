@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "수담",
+    "slug": "sudam",
+    "version": "1.0.0",
+    "scheme": "sudam",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "softwareKeyboardLayoutMode": "resize"
+    }
+  }
+}
