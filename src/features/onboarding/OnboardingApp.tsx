@@ -333,8 +333,13 @@ export default function OnboardingApp({ screen }: { screen: Screen }) {
               <View style={s.footer}>
                 {primary(editing ? '저장' : '완료', !validName, () => {
                   setProfile({ name: name.trim(), subjects: selected });
-                  if (editing && router.canGoBack()) router.back();
-                  else router.replace('/settings');
+                  if (editing) {
+                    if (router.canGoBack()) router.back();
+                    else router.replace('/settings');
+                    return;
+                  }
+                  if (router.canDismiss()) router.dismissAll();
+                  router.replace('/home');
                 })}
               </View>
             )}
