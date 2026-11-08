@@ -76,7 +76,7 @@ export const primitive = {
   },
 } as const;
 
-const { gray, blue, green, red, orange, extra } = primitive;
+const { white, gray, blue, green, red, orange, extra } = primitive;
 
 export const semantic = {
   text: {
@@ -100,8 +100,10 @@ export const semantic = {
   },
   surface: {
     subtle: gray[0],
+    input: white[0],
     default: gray[50],
     strong: gray[200],
+    inverse: gray[450],
     disabled: gray[100],
     focused: blue[50],
     brand: blue[100],
