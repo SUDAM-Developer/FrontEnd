@@ -137,13 +137,16 @@ src/app/index.tsx            # 시작
 src/app/terms.tsx            # 약관 동의
 src/app/profile.tsx          # 프로필 작성 및 수정
 src/app/settings.tsx         # 설정
+src/app/(tabs)/              # 하단 탭 (홈, 일정, 학생, 리포트, 수입)
 src/features/onboarding/    # 화면 UI 및 데모 공유 상태
+src/features/main/          # 탭 화면 UI
 app.json                    # Expo 앱 설정
 ```
 
 ### 현재 구현 범위
 
-- 시작 → 약관 동의 → 프로필 → 설정 화면
+- 시작 → 약관 동의 → 프로필 → 하단 탭 화면, 홈에서 설정으로 이동
+- 하단 탭 화면은 이동만 가능한 빈 화면이며 내용은 아직 구현 전입니다.
 - 필수 약관 선택, 이름 필수 입력, 과목 복수 선택, 프로필 수정
 - Expo Image로 번들에 포함된 SVG를 표시하며 웹 전용 절대 경로를 사용하지 않습니다.
 - Safe Area 및 iOS 키보드 회피 처리
