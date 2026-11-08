@@ -1,33 +1,17 @@
 import { Link, Redirect, Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MainTabBar } from '@/features/main/MainTabBar';
 import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
 
 export default function TabsLayout() {
   const { profile } = useOnboarding();
-  const insets = useSafeAreaInsets();
   if (!profile.name) return <Redirect href="/" />;
   return (
     <View style={s.page}>
       <View style={s.phone}>
         <Tabs
-          screenOptions={{
-            tabBarActiveTintColor: '#3b82f6',
-            tabBarInactiveTintColor: '#a8adb7',
-            tabBarIcon: () => null,
-            tabBarStyle: {
-              height: 84 + insets.bottom,
-              paddingTop: 16,
-              paddingBottom: 16 + insets.bottom,
-              paddingHorizontal: 24,
-              backgroundColor: '#fff',
-              borderTopWidth: 0,
-            },
-            tabBarItemStyle: { paddingVertical: 0 },
-            tabBarIconStyle: { width: 28, height: 28 },
-            tabBarLabelStyle: { fontSize: 12, marginTop: 4 },
-            headerTitleAlign: 'center',
-          }}
+          tabBar={(props) => <MainTabBar {...props} />}
+          screenOptions={{ headerTitleAlign: 'center' }}
         >
           <Tabs.Screen
             name="home"
