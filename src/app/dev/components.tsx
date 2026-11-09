@@ -69,6 +69,16 @@ export default function ComponentsPreview() {
       <ActionButton label="btn" />
       <ActionButton label="btn" disabled />
       <ActionButton label="btn" loading />
+      {(['S', 'M'] as const).map((size) => (
+        <View key={size} style={s.row}>
+          <ActionButton variant="secondary" size={size} label="btn" />
+          <ActionButton variant="secondary" size={size} label="btn" disabled />
+          <ActionButton variant="secondary" size={size} label="btn" loading />
+        </View>
+      ))}
+      <ActionButton variant="secondary" label="btn" />
+      <ActionButton variant="secondary" label="btn" disabled />
+      <ActionButton variant="secondary" label="btn" loading />
     </ScrollView>
   );
 }

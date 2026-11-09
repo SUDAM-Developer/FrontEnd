@@ -1,4 +1,5 @@
 import loadingDotsImage from '../../assets/images/loadingbtn.svg';
+import loadingDotsBlueImage from '../../assets/images/loadingbtn_blue.svg';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import type { PressableProps } from 'react-native';
 import { Image } from 'expo-image';
@@ -8,26 +9,59 @@ import { fontSize, fontWeight, letterSpacing, lineHeight } from '@/styles/typogr
 
 // TODO: 피그마에서 아직 확인하지 않은 값입니다. 확인 후 토큰으로 교체해야 합니다.
 const unconfirmed = {
-  loadingBackground: semantic.action.pressed,
+  primaryLoadingBackground: semantic.action.pressed,
+  secondaryLoadingBackground: semantic.surface.default,
 };
 
 export type ActionButtonSize = 'L' | 'M' | 'S';
+/** primary: 파란 채움, secondary: 연한 배경 */
+export type ActionButtonVariant = 'primary' | 'secondary';
 
 export type ActionButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   label: string;
   /** L: 가로 꽉 참, M: 96, S: 72 */
   size?: ActionButtonSize;
+  variant?: ActionButtonVariant;
   /** true면 글씨 대신 로딩 점을 보여 주고 누를 수 없게 합니다. */
   loading?: boolean;
+};
+
+const variants = {
+  primary: {
+    background: semantic.action.default,
+    pressedBackground: semantic.action.pressed,
+    loadingBackground: unconfirmed.primaryLoadingBackground,
+    disabledBackground: semantic.action.disabled,
+    text: semantic.text.default.inverse,
+    disabledText: semantic.text.default.weak,
+    dots: loadingDotsImage,
+  },
+  secondary: {
+    background: semantic.surface.default,
+    pressedBackground: semantic.surface.default,
+    loadingBackground: unconfirmed.secondaryLoadingBackground,
+    disabledBackground: semantic.surface.disabled,
+    text: semantic.text.brand.assistive,
+    disabledText: semantic.text.default.weak,
+    dots: loadingDotsBlueImage,
+  },
 };
 
 export function ActionButton({
   label,
   size = 'L',
+  variant = 'primary',
   disabled,
   loading = false,
   ...props
 }: ActionButtonProps) {
+  const v = variants[variant];
+  const background = (pressed: boolean) => {
+    if (disabled) return v.disabledBackground;
+    if (loading) return v.loadingBackground;
+    return pressed ? v.pressedBackground : v.background;
+  };
+
   return (
     <Pressable
       {...props}
@@ -36,18 +70,14 @@ export function ActionButton({
       disabled={disabled || loading}
       aria-disabled={disabled || loading || undefined}
       aria-busy={loading || undefined}
-      style={({ pressed }) => [
-        s.base,
-        sizes[size],
-        pressed && s.pressed,
-        loading && s.loading,
-        disabled && s.disabled,
-      ]}
+      style={({ pressed }) => [s.base, sizes[size], { backgroundColor: background(pressed) }]}
     >
       {loading ? (
-        <Image source={loadingDotsImage} style={s.dots} loading="eager" />
+        <Image source={v.dots} style={s.dots} loading="eager" />
       ) : (
-        <Text style={[s.label, labels[size], disabled && s.labelDisabled]}>{label}</Text>
+        <Text style={[s.label, labels[size], { color: disabled ? v.disabledText : v.text }]}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
@@ -58,17 +88,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.small,
-    backgroundColor: semantic.action.default,
   },
-  pressed: { backgroundColor: semantic.action.pressed },
-  loading: { backgroundColor: unconfirmed.loadingBackground },
-  disabled: { backgroundColor: semantic.action.disabled },
-  label: {
-    fontWeight: fontWeight.semiBold,
-    textAlign: 'center',
-    color: semantic.text.default.inverse,
-  },
-  labelDisabled: { color: semantic.text.default.weak },
+  label: { fontWeight: fontWeight.semiBold, textAlign: 'center' },
   dots: { width: 23, height: 6 },
 });
 
