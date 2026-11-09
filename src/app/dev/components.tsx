@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Redirect } from 'expo-router';
 import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ProgressBar } from '@/components/ProgressBar';
 import { TextInput } from '@/components/TextInput';
 import { semantic } from '@/styles/colors';
 import { gap, grid } from '@/styles/measurement';
@@ -35,6 +36,12 @@ export default function ComponentsPreview() {
         placeholder="텍스트를 입력해주세요"
         errorMessage="에러메세지"
       />
+
+      <Text style={s.title}>Progress Bar</Text>
+      <ProgressBar step={1} total={2} showLabel={false} />
+      {[1, 2, 3, 4, 5].map((step) => (
+        <ProgressBar key={step} step={step} total={5} />
+      ))}
     </ScrollView>
   );
 }
