@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Redirect } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActionButton } from '@/components/ActionButton';
 import { Loading } from '@/components/Loading';
 import { ProgressBar } from '@/components/ProgressBar';
 import { TextInput } from '@/components/TextInput';
@@ -56,6 +57,18 @@ export default function ComponentsPreview() {
         <Text style={s.link}>3초 동안 로딩 보기</Text>
       </Pressable>
       <Loading visible={loading} />
+
+      <Text style={s.title}>ActionButton</Text>
+      {(['S', 'M'] as const).map((size) => (
+        <View key={size} style={s.row}>
+          <ActionButton size={size} label="btn" />
+          <ActionButton size={size} label="btn" disabled />
+          <ActionButton size={size} label="btn" loading />
+        </View>
+      ))}
+      <ActionButton label="btn" />
+      <ActionButton label="btn" disabled />
+      <ActionButton label="btn" loading />
     </ScrollView>
   );
 }
@@ -71,4 +84,5 @@ const s = StyleSheet.create({
   },
   title: { ...typography.heading[1].bold, color: semantic.text.default.strong },
   link: { ...typography.body[2].medium, color: semantic.text.brand.normal },
+  row: { flexDirection: 'row', gap: gap[8] },
 });
