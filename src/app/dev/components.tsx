@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Redirect } from 'expo-router';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Loading } from '@/components/Loading';
 import { ProgressBar } from '@/components/ProgressBar';
 import { TextInput } from '@/components/TextInput';
 import { semantic } from '@/styles/colors';
@@ -12,6 +13,7 @@ export default function ComponentsPreview() {
   const [empty, setEmpty] = useState('');
   const [filled, setFilled] = useState('값');
   const [error, setError] = useState('값');
+  const [loading, setLoading] = useState(false);
 
   if (!__DEV__) return <Redirect href="/" />;
 
@@ -42,6 +44,18 @@ export default function ComponentsPreview() {
       {[1, 2, 3, 4, 5].map((step) => (
         <ProgressBar key={step} step={step} total={5} />
       ))}
+
+      <Text style={s.title}>Loading</Text>
+      <Pressable
+        role="button"
+        onPress={() => {
+          setLoading(true);
+          setTimeout(() => setLoading(false), 3000);
+        }}
+      >
+        <Text style={s.link}>3초 동안 로딩 보기</Text>
+      </Pressable>
+      <Loading visible={loading} />
     </ScrollView>
   );
 }
@@ -56,4 +70,5 @@ const s = StyleSheet.create({
     gap: gap[16],
   },
   title: { ...typography.heading[1].bold, color: semantic.text.default.strong },
+  link: { ...typography.body[2].medium, color: semantic.text.brand.normal },
 });
