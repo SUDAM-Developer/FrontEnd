@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Redirect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ActionButton } from '@/components/ActionButton';
+import { Chip } from '@/components/Chip';
 import { Loading } from '@/components/Loading';
 import { ProgressBar } from '@/components/ProgressBar';
+import { SearchBar } from '@/components/SearchBar';
+import { SelectButton } from '@/components/SelectButton';
 import { TextInput } from '@/components/TextInput';
 import { semantic } from '@/styles/colors';
 import { gap, grid } from '@/styles/measurement';
@@ -15,6 +18,9 @@ export default function ComponentsPreview() {
   const [filled, setFilled] = useState('값');
   const [error, setError] = useState('값');
   const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState(true);
+  const [chip, setChip] = useState(false);
+  const [search, setSearch] = useState('은행을 검색하세요');
 
   if (!__DEV__) return <Redirect href="/" />;
 
@@ -79,6 +85,25 @@ export default function ComponentsPreview() {
       <ActionButton variant="secondary" label="btn" />
       <ActionButton variant="secondary" label="btn" disabled />
       <ActionButton variant="secondary" label="btn" loading />
+
+      <Text style={s.title}>SelectButton</Text>
+      <SelectButton label="학생 당일 취소" />
+      <SelectButton
+        label="학생 당일 취소"
+        selected={selected}
+        onPress={() => setSelected((v) => !v)}
+      />
+
+      <Text style={s.title}>Chip</Text>
+      <View style={s.row}>
+        <Chip label="text" />
+        <Chip label="text" selected />
+        <Chip label="고2" selected={chip} onPress={() => setChip((v) => !v)} />
+      </View>
+
+      <Text style={s.title}>SearchBar</Text>
+      <SearchBar placeholder="은행을 검색하세요" />
+      <SearchBar value={search} onChangeText={setSearch} placeholder="은행을 검색하세요" />
     </ScrollView>
   );
 }
