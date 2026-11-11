@@ -94,7 +94,7 @@ export const semantic = {
     },
     feedback: {
       success: green[500],
-      warning: orange[500],
+      warning: orange[300],
       alert: red[350],
     },
   },
