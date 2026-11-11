@@ -4,6 +4,8 @@ import { Modal, Text, View } from 'react-native';
 import { ActionButton } from '@/components/ActionButton';
 import { SessionRecordScreen } from './SessionRecordScreen';
 import { RecordComplete } from './RecordComplete';
+import { MakeupSheet } from '@/features/makeup/MakeupSheet';
+import { createPreviewActions } from '@/features/makeup/previewActions';
 import { s } from './styles';
 import type {
   CancellationReason,
@@ -49,6 +51,8 @@ export function SessionPreview({
   const [notice, setNotice] = useState<
     'coordinate' | 'parent-summary' | 'student-homework' | 'report' | null
   >(null);
+  const [makeupOpen, setMakeupOpen] = useState(false);
+  const [makeupActions] = useState(() => createPreviewActions(params.scenario));
   const recordAttempts = useRef(0);
   const cancelAttempts = useRef(0);
   if (!__DEV__) return <Redirect href="/home" />;
@@ -138,7 +142,7 @@ export function SessionPreview({
           onSaveCancellation={saveCancellation}
           onBack={() => router.replace('/home')}
           onHome={() => router.replace('/home')}
-          onCoordinate={() => setNotice('coordinate')}
+          onCoordinate={() => setMakeupOpen(true)}
           onShare={setNotice}
           onReport={() => setNotice('report')}
           initialFilled={variant !== 'blank' && !empty}
@@ -149,6 +153,22 @@ export function SessionPreview({
               ? result(reasons[params.reason ?? 'teacher'] ?? '선생님 사정')
               : undefined
           }
+        />
+      )}
+      {makeupOpen && (
+        <MakeupSheet
+          lesson={{
+            id: lesson.lessonId,
+            studentName: lesson.studentName,
+            dateLabel: lesson.dateLabel,
+            date: '2026-10-14',
+            time: '20:00',
+            parentConsented: lesson.parentConsented,
+            alreadyCancelled: true,
+          }}
+          actions={makeupActions}
+          initialStep="candidates"
+          onClose={() => setMakeupOpen(false)}
         />
       )}
       <Modal visible={notice !== null} transparent onRequestClose={() => setNotice(null)}>
