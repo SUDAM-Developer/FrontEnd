@@ -1,3 +1,4 @@
+import { CAN_PREVIEW } from '@/config/review';
 import { useRef } from 'react';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import TermsScreen from '@/features/terms/TermsScreen';
@@ -6,7 +7,7 @@ import type { SaveTerms } from '@/features/terms/terms';
 export default function TermsPreview() {
   const { scenario } = useLocalSearchParams<{ scenario?: string }>();
   const attempts = useRef(0);
-  if (!__DEV__) return <Redirect href="/terms" />;
+  if (!CAN_PREVIEW) return <Redirect href="/terms" />;
   const save: SaveTerms = async (_, signal) => {
     const attempt = ++attempts.current;
     await new Promise<void>((resolve, reject) => {

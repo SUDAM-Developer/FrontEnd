@@ -34,3 +34,7 @@ expo-env.d.ts
 web-build/
 ios/
 android/
+
+# Vercel local project linkage
+.vercel/
+.vercel

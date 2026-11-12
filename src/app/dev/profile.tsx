@@ -1,3 +1,4 @@
+import { CAN_PREVIEW } from '@/config/review';
 import { useRef } from 'react';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import ProfileScreen from '@/features/profile/ProfileScreen';
@@ -5,7 +6,7 @@ import type { SaveProfile } from '@/features/profile/profile';
 export default function ProfilePreview() {
   const { scenario } = useLocalSearchParams<{ scenario?: string }>();
   const attempts = useRef(0);
-  if (!__DEV__) return <Redirect href="/profile" />;
+  if (!CAN_PREVIEW) return <Redirect href="/profile" />;
   const save: SaveProfile = async (_, signal) => {
     const attempt = ++attempts.current;
     await new Promise<void>((resolve, reject) => {
