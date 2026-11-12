@@ -1,3 +1,4 @@
+import { CAN_PREVIEW } from '@/config/review';
 import { useState } from 'react';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +16,7 @@ export function MakeupPreview() {
   }>();
   const [visible, setVisible] = useState(true);
   const [actions] = useState(() => createPreviewActions(params.scenario));
-  if (!__DEV__) return <Redirect href="/home" />;
+  if (!CAN_PREVIEW) return <Redirect href="/home" />;
   const count = Math.min(3, Math.max(1, Number(params.count) || 1));
   return (
     <SafeAreaView style={s.preview}>

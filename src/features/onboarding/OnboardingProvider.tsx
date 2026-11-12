@@ -1,3 +1,4 @@
+import { IS_TEAM_REVIEW } from '@/config/review';
 import { createContext, useContext, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 type Profile = { name: string; subjects: string[] };
@@ -18,7 +19,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [agreed, setAgreed] = useState([false, false, false]);
   const [name, setName] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
-  const [profile, setProfile] = useState<Profile>({ name: '', subjects: [] });
+  const [profile, setProfile] = useState<Profile>({
+    name: IS_TEAM_REVIEW ? '검토용' : '',
+    subjects: [],
+  });
   const [editing, setEditing] = useState(false);
   return (
     <Context.Provider

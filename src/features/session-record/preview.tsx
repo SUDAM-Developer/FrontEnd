@@ -1,3 +1,4 @@
+import { CAN_PREVIEW } from '@/config/review';
 import { useRef, useState } from 'react';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Modal, Text, View } from 'react-native';
@@ -55,7 +56,7 @@ export function SessionPreview({
   const [makeupActions] = useState(() => createPreviewActions(params.scenario));
   const recordAttempts = useRef(0);
   const cancelAttempts = useRef(0);
-  if (!__DEV__) return <Redirect href="/home" />;
+  if (!CAN_PREVIEW) return <Redirect href="/home" />;
   const variant = params.variant ?? 'first';
   const empty = variant === 'empty';
   const lesson: LessonContext = {

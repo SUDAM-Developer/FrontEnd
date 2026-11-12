@@ -1,3 +1,4 @@
+import { CAN_PREVIEW } from '@/config/review';
 import { useState } from 'react';
 import { Redirect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -22,7 +23,7 @@ export default function ComponentsPreview() {
   const [chip, setChip] = useState(false);
   const [search, setSearch] = useState('은행을 검색하세요');
 
-  if (!__DEV__) return <Redirect href="/" />;
+  if (!CAN_PREVIEW) return <Redirect href="/" />;
 
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content}>

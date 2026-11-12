@@ -1,5 +1,6 @@
+import { CAN_PREVIEW, IS_TEAM_REVIEW } from '@/config/review';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Redirect } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
@@ -8,6 +9,7 @@ import { semantic as c } from '@/styles/colors';
 import { typography as t } from '@/styles/typography';
 export default function BannerPreview() {
   const { show, dismiss } = usePushBanner();
+  const { controls } = useLocalSearchParams<{ controls?: string }>();
   const ids = useRef<string[]>([]);
   const [opened, setOpened] = useState(false);
   const sample = useCallback(
@@ -23,13 +25,15 @@ export default function BannerPreview() {
     [show],
   );
   useEffect(() => {
-    if (__DEV__) sample();
+    if (CAN_PREVIEW) sample();
     const ownIds = ids.current;
     return () => {
       ownIds.forEach((id) => dismiss(id));
     };
   }, [sample, dismiss]);
-  if (!__DEV__) return <Redirect href="/home" />;
+  if (!CAN_PREVIEW) return <Redirect href="/home" />;
+  if (IS_TEAM_REVIEW && controls !== '1') return <SafeAreaView style={s.safe} />;
+
   function clear() {
     ids.current.forEach((id) => dismiss(id));
     ids.current.length = 0;
