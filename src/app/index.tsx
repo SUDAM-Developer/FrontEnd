@@ -1,4 +1,5 @@
-import OnboardingApp from '@/features/onboarding/OnboardingApp';
-export default function Screen() {
-  return <OnboardingApp screen="welcome" />;
+import { Redirect } from 'expo-router';
+
+export default function Index() {
+  return <Redirect href="/terms" />;
 }

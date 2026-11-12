@@ -9,7 +9,8 @@
     "plugins": ["expo-router"],
     "web": {
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
     },
     "ios": {
       "supportsTablet": true
