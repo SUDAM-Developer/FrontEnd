@@ -22,8 +22,12 @@ export type ActionButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   /** L: 가로 꽉 참, M: 96, S: 72 */
   size?: ActionButtonSize;
   variant?: ActionButtonVariant;
+  /** primary 버튼의 기본 파란색 농도. strong은 진한 파란색을 사용합니다. */
+  tone?: 'default' | 'strong';
   /** true면 글씨 대신 로딩 점을 보여 주고 누를 수 없게 합니다. */
   loading?: boolean;
+  /** 필수 입력 안내 CTA처럼 비활성이어도 파란 배경·흰 글씨를 유지하는 경우에 사용합니다. */
+  disabledAppearance?: 'muted' | 'brand';
 };
 
 const variants = {
@@ -51,15 +55,22 @@ export function ActionButton({
   label,
   size = 'L',
   variant = 'primary',
+  tone = 'default',
   disabled,
   loading = false,
+  disabledAppearance = 'muted',
   ...props
 }: ActionButtonProps) {
   const v = variants[variant];
   const background = (pressed: boolean) => {
-    if (disabled) return v.disabledBackground;
+    if (disabled)
+      return disabledAppearance === 'brand' ? semantic.action.pressed : v.disabledBackground;
     if (loading) return v.loadingBackground;
-    return pressed ? v.pressedBackground : v.background;
+    return pressed
+      ? v.pressedBackground
+      : variant === 'primary' && tone === 'strong'
+        ? semantic.action.pressed
+        : v.background;
   };
 
   return (
@@ -75,7 +86,19 @@ export function ActionButton({
       {loading ? (
         <Image source={v.dots} style={s.dots} loading="eager" />
       ) : (
-        <Text style={[s.label, labels[size], { color: disabled ? v.disabledText : v.text }]}>
+        <Text
+          style={[
+            s.label,
+            labels[size],
+            {
+              color: disabled
+                ? disabledAppearance === 'brand'
+                  ? semantic.text.default.inverse
+                  : v.disabledText
+                : v.text,
+            },
+          ]}
+        >
           {label}
         </Text>
       )}
