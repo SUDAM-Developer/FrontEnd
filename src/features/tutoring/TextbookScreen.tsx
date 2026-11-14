@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { ChipSelectField, TextField } from './FormFields';
+import { ChipSelectField, TOO_LONG_MESSAGE, TextField, isTooLong } from './FormFields';
 import { TutoringFormLayout, useSubmit } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
 
 const PROGRESS_UNITS = ['Unit', '단원', 'Chapter', 'Page', '회', '기타'] as const;
 
 type ProgressUnit = (typeof PROGRESS_UNITS)[number];
+
+// 학생 이름과 같은 기준입니다.
+const TITLE_MAX_LENGTH = 10;
 
 export type TextbookScreenProps = {
   /** 없으면 안내 메시지를 보여 주지 않습니다. */
@@ -20,8 +23,12 @@ export function TextbookScreen({ prefillSource }: TextbookScreenProps) {
   const [otherUnit, setOtherUnit] = useState('');
   const [currentProgress, setCurrentProgress] = useState('');
 
+  const titleTooLong = isTooLong(title, TITLE_MAX_LENGTH);
   const canProceed =
-    title.trim().length > 0 && unit !== null && (unit !== '기타' || otherUnit.trim().length > 0);
+    title.trim().length > 0 &&
+    !titleTooLong &&
+    unit !== null &&
+    (unit !== '기타' || otherUnit.trim().length > 0);
 
   // TODO: 4단계 화면이 생기면 이동합니다.
   const { submitting, submit } = useSubmit(() => {});
@@ -38,6 +45,7 @@ export function TextbookScreen({ prefillSource }: TextbookScreenProps) {
         label="교재 (학생당 1~5권)"
         value={title}
         onChangeText={setTitle}
+        errorMessage={titleTooLong ? TOO_LONG_MESSAGE : undefined}
         placeholder="교재 이름을 입력해 주세요"
       />
       <ChipSelectField
@@ -54,7 +62,7 @@ export function TextbookScreen({ prefillSource }: TextbookScreenProps) {
         value={currentProgress}
         onChangeText={(text) => setCurrentProgress(text.replace(/[^0-9]/g, ''))}
         keyboardType="number-pad"
-        placeholder="숫자로 입력해 주세요"
+        placeholder="지금 진도"
         helperText="교재 내용은 저장하지 않고, 이름과 진도 단위만 써요."
       />
     </TutoringFormLayout>

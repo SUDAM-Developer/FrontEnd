@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { ChipSelectField, TextField } from './FormFields';
+import { ChipSelectField, TOO_LONG_MESSAGE, TextField, isTooLong } from './FormFields';
 import { TutoringFormLayout, useSubmit } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
 
@@ -10,7 +10,7 @@ const SUBJECTS = ['국어', '영어', '수학', '과학', '사회', '기타'] as
 type Grade = (typeof GRADES)[number];
 type Subject = (typeof SUBJECTS)[number];
 
-// 프로필 이름과 같은 기준입니다. 넘치면 입력은 막지 않고 오류 문구를 보여 줍니다.
+// 프로필 이름과 같은 기준입니다.
 const NAME_MAX_LENGTH = 10;
 
 export type StudentInfoScreenProps = {
@@ -32,7 +32,7 @@ export function StudentInfoScreen({ prefillSource }: StudentInfoScreenProps) {
     );
 
   const otherSubjectSelected = subjects.includes('기타');
-  const nameTooLong = name.trim().length > NAME_MAX_LENGTH;
+  const nameTooLong = isTooLong(name, NAME_MAX_LENGTH);
   const canProceed =
     name.trim().length > 0 &&
     !nameTooLong &&
@@ -61,7 +61,7 @@ export function StudentInfoScreen({ prefillSource }: StudentInfoScreenProps) {
         label="학생 이름"
         value={name}
         onChangeText={setName}
-        errorMessage={nameTooLong ? '글자 수가 초과되었어요' : undefined}
+        errorMessage={nameTooLong ? TOO_LONG_MESSAGE : undefined}
         placeholder="학생 이름을 입력해 주세요"
       />
       <ChipSelectField
