@@ -53,14 +53,20 @@ export default function Screen() {
       <HomeScreen
         data={data}
         loading={loading}
+        firstTutoring={CAN_PREVIEW && preview === 'first'}
+        onPreparationStep={(step) => {
+          if (step === 'student' || step === 'tutoring') router.push('/tutoring/student');
+          else
+            setNotice(
+              step === 'introduction'
+                ? '소개서 만들기는 준비 중이에요.'
+                : '커리큘럼 받기는 준비 중이에요.',
+            );
+        }}
         onStudents={() => router.push('/students')}
         onProfile={() => router.push('/settings')}
         onRecord={record}
-        onInstallInfo={() =>
-          setNotice(
-            '브라우저 메뉴의 홈 화면에 추가 기능으로 이용할 수 있어요. 설치 가능 여부는 브라우저와 PWA 설정에 따라 달라요. 수업·입금 알림 수신은 아직 연결되지 않았어요.',
-          )
-        }
+        onInstallInfo={() => setNotice('홈 화면 추가 및 알림 안내는 준비 중이에요.')}
         onTask={(task) => {
           if (task.id === 'income') router.push('/income');
           else if (task.id === 'records' && data.lessons[0]) record(data.lessons[0]);
