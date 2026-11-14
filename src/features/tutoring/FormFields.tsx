@@ -11,7 +11,7 @@ export const TOO_LONG_MESSAGE = '글자 수가 초과되었어요';
 /** 앞뒤 공백을 뺀 글자 수가 max를 넘는지 봅니다. 넘어도 입력은 막지 않고 오류 문구만 보여 줍니다. */
 export const isTooLong = (value: string, max: number) => value.trim().length > max;
 
-type FieldLabelProps = {
+export type FieldLabelProps = {
   label: string;
   /** 별표(*) 뒤에 붙는 설명. 예: (복수 선택 가능) */
   hint?: string;
@@ -20,7 +20,7 @@ type FieldLabelProps = {
   strong?: boolean;
 };
 
-function FieldLabel({ label, hint, required = true, strong = false }: FieldLabelProps) {
+export function FieldLabel({ label, hint, required = true, strong = false }: FieldLabelProps) {
   return (
     <Text style={[s.label, strong && s.labelStrong]}>
       {label}
