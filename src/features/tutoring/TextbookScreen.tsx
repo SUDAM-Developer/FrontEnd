@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { ChipSelectField, TOO_LONG_MESSAGE, TextField, isTooLong } from './FormFields';
 import { TutoringFormLayout, useSubmit } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
@@ -30,8 +31,13 @@ export function TextbookScreen({ prefillSource }: TextbookScreenProps) {
     unit !== null &&
     (unit !== '기타' || otherUnit.trim().length > 0);
 
-  // TODO: 4단계 화면이 생기면 이동합니다.
-  const { submitting, submit } = useSubmit(() => {});
+  // TODO: 입력한 교재 정보를 다음 단계로 넘기거나 저장합니다.
+  const { submitting, submit } = useSubmit(() =>
+    router.push({
+      pathname: '/tutoring/settlement',
+      params: prefillSource ? { source: prefillSource } : {},
+    }),
+  );
 
   return (
     <TutoringFormLayout
