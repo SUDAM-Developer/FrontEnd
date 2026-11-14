@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { ChipSelectField, TOO_LONG_MESSAGE, TextField, isTooLong } from './FormFields';
-import { TutoringFormLayout, useSubmit } from './TutoringFormLayout';
+import { TutoringFormLayout } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
 
 const PROGRESS_UNITS = ['Unit', '단원', 'Chapter', 'Page', '회', '기타'] as const;
@@ -32,20 +32,20 @@ export function TextbookScreen({ prefillSource }: TextbookScreenProps) {
     (unit !== '기타' || otherUnit.trim().length > 0);
 
   // TODO: 입력한 교재 정보를 다음 단계로 넘기거나 저장합니다.
-  const { submitting, submit } = useSubmit(() =>
+  const handleNext = () => {
     router.push({
       pathname: '/tutoring/settlement',
       params: prefillSource ? { source: prefillSource } : {},
-    }),
-  );
+    });
+  };
 
   return (
     <TutoringFormLayout
       step={3}
       prefillSource={prefillSource}
       canProceed={canProceed}
-      submitting={submitting}
-      onNext={submit}
+      submitting={false}
+      onNext={handleNext}
     >
       <TextField
         label="교재 (학생당 1~5권)"

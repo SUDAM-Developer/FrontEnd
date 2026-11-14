@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { ChipSelectField, TOO_LONG_MESSAGE, TextField, isTooLong } from './FormFields';
-import { TutoringFormLayout, useSubmit } from './TutoringFormLayout';
+import { TutoringFormLayout } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
 
 const GRADES = ['초6', '중1', '중2', '중3', '고1', '고2', '고3', '기타'] as const;
@@ -42,20 +42,20 @@ export function StudentInfoScreen({ prefillSource }: StudentInfoScreenProps) {
     (!otherSubjectSelected || otherSubject.trim().length > 0);
 
   // TODO: 입력한 학생 정보를 다음 단계로 넘기거나 저장합니다.
-  const { submitting, submit } = useSubmit(() =>
+  const handleNext = () => {
     router.push({
       pathname: '/tutoring/textbook',
       params: prefillSource ? { source: prefillSource } : {},
-    }),
-  );
+    });
+  };
 
   return (
     <TutoringFormLayout
       step={2}
       prefillSource={prefillSource}
       canProceed={canProceed}
-      submitting={submitting}
-      onNext={submit}
+      submitting={false}
+      onNext={handleNext}
     >
       <TextField
         label="학생 이름"
