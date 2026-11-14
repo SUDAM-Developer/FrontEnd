@@ -38,8 +38,10 @@ const reasons: Record<string, CancellationReason> = {
 };
 export function SessionPreview({
   screen = 'record',
+  lessonOverride,
 }: {
   screen?: 'record' | 'sheet' | 'complete' | 'record-complete';
+  lessonOverride?: LessonContext;
 }) {
   const params = useLocalSearchParams<{
     variant?: string;
@@ -59,7 +61,7 @@ export function SessionPreview({
   if (!CAN_PREVIEW) return <Redirect href="/home" />;
   const variant = params.variant ?? 'first';
   const empty = variant === 'empty';
-  const lesson: LessonContext = {
+  const lesson: LessonContext = lessonOverride ?? {
     lessonId: 'preview-lesson',
     studentName: screen === 'record-complete' ? '윤서아' : '박도윤',
     dateLabel: '10월 14일 화요일',
