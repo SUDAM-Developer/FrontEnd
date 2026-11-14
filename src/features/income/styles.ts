@@ -34,7 +34,7 @@ export const s = StyleSheet.create({
   },
   totalText: { ...t.body[5].semiBold, color: c.text.default.inverse },
   separator: { width: 1, height: 12, backgroundColor: c.border.default },
-  illustration: { position: 'absolute', right: padding[16], top: 32, width: 64, height: 80 },
+  illustration: { position: 'absolute', right: padding[12], top: 24 },
   info: {
     marginTop: gap[20],
     minHeight: 48,
