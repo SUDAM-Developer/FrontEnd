@@ -35,6 +35,8 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
   const mounted = useRef(true);
   const controller = useRef<AbortController | null>(null);
   const validName = isValidProfileName(draftName);
+  const nameTooLong = draftName.trim().length > 10;
+  const canSubmit = validName && draftSubjects.length > 0;
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -44,7 +46,7 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
   }, []);
 
   async function submit() {
-    if (!validName || inFlight.current) return;
+    if (!canSubmit || inFlight.current) return;
     inFlight.current = true;
     setFailed(false);
     Keyboard.dismiss();
@@ -117,12 +119,13 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
           <Text role="heading" style={s.title}>
             학부모님께 보일 이름을 알려 주세요
           </Text>
-          <Text style={s.nameLabel}>이름*</Text>
+          <Text style={s.nameLabel}>
+            이름<Text style={s.required}>*</Text>
+          </Text>
           <TextInput
             accessibilityLabel="이름 (필수)"
             value={draftName}
             placeholder="2~10자 이내"
-            maxLength={10}
             editable={!saving}
             autoComplete="name"
             returnKeyType="done"
@@ -130,17 +133,22 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
               setDraftName(value);
               setFailed(false);
             }}
+            onBlur={() => setTouched(true)}
             onSubmitEditing={() => {
               if (!validName) setTouched(true);
               else void submit();
             }}
             errorMessage={
-              touched && draftName.length > 0 && !validName
-                ? '이름은 2~10자로 입력해 주세요.'
-                : undefined
+              nameTooLong
+                ? '글자 수가 초과되었어요'
+                : touched && draftName.length > 0 && !validName
+                  ? '이름은 2~10자로 입력해 주세요.'
+                  : undefined
             }
           />
-          <Text style={s.subjectLabel}>과목 (선택, 여러 개)</Text>
+          <Text style={s.subjectLabel}>
+            과목<Text style={s.required}>*</Text> (복수 선택 가능)
+          </Text>
           <View style={s.chips}>
             {profileSubjects.map((subject) => (
               <Chip
@@ -168,7 +176,7 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
           )}
           <ActionButton
             label={editing ? '저장' : '완료'}
-            disabled={!validName}
+            disabled={!canSubmit}
             loading={saving}
             onPress={() => void submit()}
           />
@@ -210,6 +218,7 @@ const s = StyleSheet.create({
     color: semantic.text.default.strong,
     marginBottom: gap[20],
   },
+  required: { color: semantic.text.brand.assistive },
   nameLabel: {
     ...typography.body[5].medium,
     color: semantic.text.default.normal,
