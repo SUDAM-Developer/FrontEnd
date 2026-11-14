@@ -8,6 +8,7 @@ const colors = {
   background: semantic.surface.default,
   border: semantic.border.default,
   text: semantic.text.default.normal,
+  mutedText: semantic.text.default.weak,
   selectedBackground: semantic.action.default,
   selectedBorder: semantic.border.focused,
   selectedText: semantic.text.default.inverse,
@@ -16,14 +17,16 @@ const colors = {
 export type ChipProps = Omit<PressableProps, 'style' | 'children'> & {
   label: string;
   selected?: boolean;
+  /** true면 선택되지 않았을 때 글자를 연한 색(text/default/weak)으로 보여 줍니다. */
+  muted?: boolean;
 };
 
 /** 둥근 선택 칩. 너비는 글자 길이에 맞춰집니다. */
-export function Chip({ label, selected = false, ...props }: ChipProps) {
+export function Chip({ label, selected = false, muted = false, ...props }: ChipProps) {
   return (
     <Pressable
       {...props}
-      role="checkbox"
+      role={props.role ?? 'checkbox'}
       aria-checked={selected}
       accessibilityLabel={label}
       style={[
@@ -34,7 +37,12 @@ export function Chip({ label, selected = false, ...props }: ChipProps) {
         },
       ]}
     >
-      <Text style={[s.label, { color: selected ? colors.selectedText : colors.text }]}>
+      <Text
+        style={[
+          s.label,
+          { color: selected ? colors.selectedText : muted ? colors.mutedText : colors.text },
+        ]}
+      >
         {label}
       </Text>
     </Pressable>
