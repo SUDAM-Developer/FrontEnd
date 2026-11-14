@@ -43,7 +43,6 @@ export function HomeScreen({
   const todoCount = data.tasks.reduce((sum, task) => sum + task.count, 0);
   return (
     <SafeAreaView edges={['top']} style={s.safe}>
-      <View style={s.webInset} />
       <View style={s.header}>
         <Image source={logo} style={s.logo} contentFit="contain" accessibilityLabel="SUDAM" />
         <Pressable

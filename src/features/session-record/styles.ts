@@ -1,10 +1,10 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { semantic as c } from '@/styles/colors';
 import { padding, grid, radius, gap } from '@/styles/measurement';
 import { typography as t } from '@/styles/typography';
 export const s = StyleSheet.create({
   safe: { flex: 1, alignItems: 'center', backgroundColor: c.surface.input },
-  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  phone: { flex: 1, width: '100%', maxWidth: 390 },
   header: { height: 72, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { ...t.body[1].semiBold, color: c.text.default.strong },
   back: {
@@ -110,7 +110,7 @@ export const s = StyleSheet.create({
   footer: {
     paddingHorizontal: grid.margin,
     paddingTop: padding[8],
-    paddingBottom: Platform.OS === 'web' ? 56 : 24,
+    paddingBottom: 24,
     backgroundColor: c.surface.input,
     gap: gap[12],
   },
