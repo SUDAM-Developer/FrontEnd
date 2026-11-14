@@ -29,7 +29,8 @@ export function TextbookScreen({ prefillSource }: TextbookScreenProps) {
     title.trim().length > 0 &&
     !titleTooLong &&
     unit !== null &&
-    (unit !== '기타' || otherUnit.trim().length > 0);
+    (unit !== '기타' || otherUnit.trim().length > 0) &&
+    currentProgress.trim().length > 0;
 
   // TODO: 입력한 교재 정보를 다음 단계로 넘기거나 저장합니다.
   const handleNext = () => {
