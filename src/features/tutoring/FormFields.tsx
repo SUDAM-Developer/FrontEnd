@@ -16,11 +16,13 @@ type FieldLabelProps = {
   /** 별표(*) 뒤에 붙는 설명. 예: (복수 선택 가능) */
   hint?: string;
   required?: boolean;
+  /** true면 라벨을 더 진한 색(text/default/strong)으로 보여 줍니다. */
+  strong?: boolean;
 };
 
-function FieldLabel({ label, hint, required = true }: FieldLabelProps) {
+function FieldLabel({ label, hint, required = true, strong = false }: FieldLabelProps) {
   return (
-    <Text style={s.label}>
+    <Text style={[s.label, strong && s.labelStrong]}>
       {label}
       {required ? <Text style={s.required}>*</Text> : null}
       {hint ? ` ${hint}` : null}
@@ -31,11 +33,11 @@ function FieldLabel({ label, hint, required = true }: FieldLabelProps) {
 export type TextFieldProps = Omit<TextInputProps, 'accessibilityLabel'> & FieldLabelProps;
 
 /** 위에 라벨이 붙은 입력칸 */
-export function TextField({ label, hint, required, ...inputProps }: TextFieldProps) {
+export function TextField({ label, hint, required, strong, ...inputProps }: TextFieldProps) {
   return (
     <View style={s.textField}>
       <View style={s.textLabel}>
-        <FieldLabel label={label} hint={hint} required={required} />
+        <FieldLabel label={label} hint={hint} required={required} strong={strong} />
       </View>
       <TextInput accessibilityLabel={label} returnKeyType="done" {...inputProps} />
     </View>
@@ -57,6 +59,7 @@ export function ChipSelectField<T extends string>({
   label,
   hint,
   required,
+  strong,
   options,
   isSelected,
   onPress,
@@ -66,7 +69,7 @@ export function ChipSelectField<T extends string>({
   return (
     <View style={s.selectField}>
       <View style={s.selectLabel}>
-        <FieldLabel label={label} hint={hint} required={required} />
+        <FieldLabel label={label} hint={hint} required={required} strong={strong} />
       </View>
       <View role={single ? 'radiogroup' : 'group'} accessibilityLabel={label} style={s.chips}>
         {options.map((option) => (
@@ -100,6 +103,7 @@ const s = StyleSheet.create({
     ...typography.body[5].semiBold,
     color: semantic.text.default.neutral,
   },
+  labelStrong: { color: semantic.text.default.strong },
   required: { color: semantic.text.brand.assistive },
   textField: { gap: gap[8] },
   textLabel: { paddingHorizontal: padding[8] },

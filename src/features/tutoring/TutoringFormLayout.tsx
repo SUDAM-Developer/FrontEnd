@@ -1,5 +1,5 @@
 import arrowBackImage from '../../../assets/images/arrow_back.svg';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -27,23 +27,40 @@ export const isPrefillSource = (value: unknown): value is PrefillSource =>
 
 // TODO: 저장 API가 생기면 실제 요청으로 바꿉니다. 지금은 로딩 화면만 보여 줍니다.
 const SUBMIT_PREVIEW_MS = 1500;
+const ERROR_TOAST_MS = 3000;
 
-/** "다음"을 누르면 로딩을 보여 주고, 끝나면 onDone을 부릅니다. */
-export function useSubmit(onDone: () => void) {
+const previewRequest = () => new Promise<void>((resolve) => setTimeout(resolve, SUBMIT_PREVIEW_MS));
+
+/**
+ * "다음"을 누르면 request를 기다리는 동안 로딩을 보여 주고, 성공하면 onDone을 부릅니다.
+ * 실패하면 failed가 3초 동안 true가 됩니다.
+ */
+export function useSubmit(onDone: () => void, request: () => Promise<void> = previewRequest) {
   const [submitting, setSubmitting] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!failed) return;
+    const timer = setTimeout(() => setFailed(false), ERROR_TOAST_MS);
+    return () => clearTimeout(timer);
+  }, [failed]);
 
   const submit = async () => {
     if (submitting) return;
+    setFailed(false);
     setSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, SUBMIT_PREVIEW_MS));
+      await request();
+    } catch {
+      setFailed(true);
+      return;
     } finally {
       setSubmitting(false);
     }
     onDone();
   };
 
-  return { submitting, submit };
+  return { submitting, failed, submit };
 }
 
 export type TutoringFormLayoutProps = {
@@ -53,6 +70,12 @@ export type TutoringFormLayoutProps = {
   canProceed: boolean;
   submitting: boolean;
   onNext: () => void;
+  /** 하단 버튼 글자. 기본값은 "다음" */
+  ctaLabel?: string;
+  /** false면 로딩 중에 가운데 로딩 카드 없이 버튼만 로딩으로 바뀝니다. */
+  loadingOverlay?: boolean;
+  /** 값이 있으면 하단 버튼 위에 토스트로 보여 줍니다. */
+  toast?: string;
   children: ReactNode;
 };
 
@@ -63,6 +86,9 @@ export function TutoringFormLayout({
   canProceed,
   submitting,
   onNext,
+  ctaLabel = '다음',
+  loadingOverlay = true,
+  toast,
   children,
 }: TutoringFormLayoutProps) {
   const back = () => {
@@ -96,8 +122,15 @@ export function TutoringFormLayout({
         </ScrollView>
 
         <View style={s.cta}>
+          {toast ? (
+            <View pointerEvents="none" style={s.toastSlot}>
+              <View role="alert" accessibilityLiveRegion="assertive" style={s.toast}>
+                <Text style={s.toastText}>{toast}</Text>
+              </View>
+            </View>
+          ) : null}
           <ActionButton
-            label="다음"
+            label={ctaLabel}
             disabled={!canProceed}
             loading={submitting}
             onPress={() => {
@@ -106,7 +139,7 @@ export function TutoringFormLayout({
           />
         </View>
       </View>
-      <Loading visible={submitting} />
+      <Loading visible={loadingOverlay && submitting} />
     </SafeAreaView>
   );
 }
@@ -146,6 +179,18 @@ const s = StyleSheet.create({
     color: semantic.text.brand.assistive,
   },
   form: { paddingVertical: padding[12], gap: gap[20] },
+  // 토스트 아래쪽이 버튼 위쪽에서 12px 떨어지도록 CTA 위로 띄웁니다. (토스트 32 + 12 - CTA 위 여백 20)
+  toastSlot: { position: 'absolute', top: -24, left: 0, right: 0, alignItems: 'center' },
+  toast: {
+    backgroundColor: semantic.surface.inverse,
+    borderRadius: radius.full,
+    paddingHorizontal: padding[12],
+    paddingVertical: padding[8],
+    // PushBanner와 같은 그림자입니다.
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.18)',
+    elevation: 6,
+  },
+  toastText: { ...typography.caption[1].regular, color: semantic.text.default.inverse },
   cta: {
     paddingHorizontal: padding[24],
     paddingTop: padding[20],
