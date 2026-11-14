@@ -32,6 +32,7 @@ export function HomeScreen({
   const [bannerVisible, setBannerVisible] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [cardWidth, setCardWidth] = useState(342);
+  const cardStride = cardWidth + 16;
   const carousel = useRef<ComponentRef<typeof ScrollView>>(null);
   const todoCount = data.tasks.reduce((sum, task) => sum + task.count, 0);
   return (
@@ -86,20 +87,24 @@ export function HomeScreen({
               <Text style={s.sectionCount}>{data.lessons.length}</Text>
             </View>
             {data.lessons.length > 0 && (
-              <View onLayout={(event) => setCardWidth(event.nativeEvent.layout.width)}>
+              <View
+                style={s.carouselViewport}
+                onLayout={(event) => setCardWidth(Math.max(1, event.nativeEvent.layout.width - 24))}
+              >
                 <ScrollView
                   ref={carousel}
                   horizontal
                   pagingEnabled
+                  contentContainerStyle={s.carouselContent}
                   showsHorizontalScrollIndicator={false}
                   scrollEventThrottle={16}
                   onScroll={(event) => {
-                    const index = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
+                    const index = Math.round(event.nativeEvent.contentOffset.x / cardStride);
                     setActiveIndex(Math.max(0, Math.min(data.lessons.length - 1, index)));
                   }}
                 >
                   {data.lessons.map((lesson) => (
-                    <View key={lesson.id} style={[s.lesson, { width: cardWidth }]}>
+                    <View key={lesson.id} style={[s.lesson, { width: cardWidth, marginRight: 16 }]}>
                       <Text style={s.session}>오늘 {lesson.sessionNumber}회차</Text>
                       <View style={s.lessonRow}>
                         <View style={s.lessonInfo}>
@@ -161,7 +166,7 @@ export function HomeScreen({
                     style={s.dotTarget}
                     onPress={() => {
                       setActiveIndex(index);
-                      carousel.current?.scrollTo({ x: cardWidth * index, animated: true });
+                      carousel.current?.scrollTo({ x: cardStride * index, animated: true });
                     }}
                   >
                     <View style={[s.dot, activeIndex === index && s.activeDot]} />
@@ -179,7 +184,7 @@ export function HomeScreen({
               <Text style={s.sectionTitle}>할 일</Text>
               <Text style={s.sectionCount}>{todoCount}</Text>
             </View>
-            <View style={s.tasks}>
+            <View style={[s.tasks, data.lessons.length === 0 && s.emptyTasks]}>
               {data.tasks.map((task, index) => (
                 <Pressable
                   key={task.id}
@@ -190,25 +195,9 @@ export function HomeScreen({
                   style={[s.task, index > 0 && s.taskBorder]}
                 >
                   <Text style={s.taskLabel}>{task.label}</Text>
-                  <View
-                    style={[
-                      s.badge,
-                      data.lessons.length > 0 &&
-                        task.count > 0 &&
-                        (task.id === 'income' ? s.orangeBadge : s.blueBadge),
-                    ]}
-                  >
-                    <Text
-                      style={
-                        data.lessons.length === 0
-                          ? [s.taskCount, task.count > 0 && s.taskCountActive]
-                          : [s.badgeText, task.count > 0 && s.badgeTextActive]
-                      }
-                    >
-                      {task.count}
-                      {data.lessons.length === 0 ? '건' : ''}
-                    </Text>
-                  </View>
+                  <Text style={[s.taskCount, task.count > 0 && s.taskCountActive]}>
+                    {task.count}건
+                  </Text>
                 </Pressable>
               ))}
             </View>
