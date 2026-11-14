@@ -1,7 +1,7 @@
 import arrowBackImage from '../../../assets/images/arrow_back.svg';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -147,7 +147,7 @@ export function TutoringFormLayout({
 const s = StyleSheet.create({
   safe: { flex: 1, alignItems: 'center', backgroundColor: semantic.surface.input },
   // 웹에서는 휴대폰 너비(390)로 가운데 정렬하고, 상태바 높이만큼 위를 띄웁니다.
-  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  phone: { flex: 1, width: '100%', maxWidth: 390 },
   navBar: {
     flexDirection: 'row',
     alignItems: 'center',

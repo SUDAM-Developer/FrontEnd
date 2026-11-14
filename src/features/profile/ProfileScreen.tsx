@@ -188,7 +188,7 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
 }
 const s = StyleSheet.create({
   safeArea: { flex: 1, alignItems: 'center', backgroundColor: semantic.surface.input },
-  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  phone: { flex: 1, width: '100%', maxWidth: 390 },
   header: { height: 54, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { ...typography.body[1].semiBold, color: semantic.text.default.strong },
   back: {
@@ -233,7 +233,7 @@ const s = StyleSheet.create({
     marginLeft: padding[4],
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: gap[8] },
-  footer: { paddingHorizontal: grid.margin, paddingTop: padding[16], paddingBottom: 56 },
+  footer: { paddingHorizontal: grid.margin, paddingTop: padding[16], paddingBottom: 24 },
   error: { marginBottom: gap[8] },
   errorText: { ...typography.caption[1].regular, color: semantic.text.feedback.warning },
 });

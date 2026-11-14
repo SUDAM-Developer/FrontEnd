@@ -1,11 +1,10 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { primitive } from '@/styles/colors';
 const { blue, gray, orange } = primitive;
 export const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fff' },
-  webInset: { height: Platform.OS === 'web' ? 44 : 0 },
   header: {
-    height: 64,
+    height: 56,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -21,7 +20,7 @@ export const s = StyleSheet.create({
   },
   profileText: { fontSize: 12, fontWeight: '600', color: blue[500] },
   content: { paddingBottom: 24 },
-  banner: { height: 92, backgroundColor: blue[100] },
+  banner: { height: 76, backgroundColor: blue[100] },
   bannerBody: {
     flex: 1,
     flexDirection: 'row',
@@ -29,9 +28,9 @@ export const s = StyleSheet.create({
     paddingHorizontal: 24,
     paddingRight: 32,
   },
-  art: { width: 64, height: 64 },
+  art: { width: 56, height: 56 },
   bannerCopy: { flex: 1, marginLeft: 12 },
-  bannerTitle: { fontSize: 15, fontWeight: '700', color: blue[500], marginBottom: 4 },
+  bannerTitle: { fontSize: 14, fontWeight: '700', color: blue[500], marginBottom: 4 },
   bannerText: { fontSize: 12, lineHeight: 17, color: blue[600] },
   close: {
     position: 'absolute',
@@ -43,7 +42,7 @@ export const s = StyleSheet.create({
     justifyContent: 'center',
   },
   closeText: { fontSize: 16, color: gray[200] },
-  section: { paddingHorizontal: 24, paddingTop: 20 },
+  section: { paddingHorizontal: 24, paddingTop: 16 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -98,7 +97,7 @@ export const s = StyleSheet.create({
   emptyTasks: { borderWidth: 1, borderColor: gray[100] },
   loadingRoot: { flex: 1 },
   skeleton: { backgroundColor: gray[100], borderRadius: 8 },
-  bannerSkeleton: { height: 92, backgroundColor: gray[100] },
+  bannerSkeleton: { height: 76, backgroundColor: gray[100] },
   lessonSkeleton: { height: 168 },
   tasksSkeleton: { height: 171 },
   skeletonDot: { marginHorizontal: 2 },

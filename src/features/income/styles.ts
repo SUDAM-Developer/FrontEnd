@@ -1,10 +1,10 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { primitive, semantic as c } from '@/styles/colors';
 import { typography as t } from '@/styles/typography';
 import { padding, radius, gap, grid } from '@/styles/measurement';
 export const s = StyleSheet.create({
   safe: { flex: 1, alignItems: 'center', backgroundColor: c.surface.input },
-  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  phone: { flex: 1, width: '100%', maxWidth: 390 },
   header: { height: 67, justifyContent: 'center', paddingHorizontal: grid.margin },
   title: { ...t.heading[1].semiBold, color: c.text.default.strong },
   scroll: { flex: 1 },

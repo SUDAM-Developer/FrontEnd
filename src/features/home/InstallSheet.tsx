@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { primitive } from '@/styles/colors';
@@ -17,10 +17,7 @@ export function InstallSheet({ onClose }: { onClose: () => void }) {
         />
         <View
           accessibilityViewIsModal
-          style={[
-            s.sheet,
-            { paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 52 : 24) },
-          ]}
+          style={[s.sheet, { paddingBottom: Math.max(insets.bottom, 24) }]}
         >
           <View style={s.handle} />
           <ScrollView contentContainerStyle={s.content} bounces={false}>
