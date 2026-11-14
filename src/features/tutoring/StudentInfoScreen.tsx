@@ -6,10 +6,11 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { Chip } from '@/components/Chip';
+import { Loading } from '@/components/Loading';
 import { ProgressBar } from '@/components/ProgressBar';
 import { TextInput } from '@/components/TextInput';
 import { semantic } from '@/styles/colors';
-import { gap, padding, radius } from '@/styles/measurement';
+import { gap, padding, radius, unit } from '@/styles/measurement';
 import { typography } from '@/styles/typography';
 
 const GRADES = ['초6', '중1', '중2', '중3', '고1', '고2', '고3', '기타'] as const;
@@ -17,6 +18,20 @@ const SUBJECTS = ['국어', '영어', '수학', '과학', '사회', '기타'] as
 
 type Grade = (typeof GRADES)[number];
 type Subject = (typeof SUBJECTS)[number];
+
+// TODO: 저장 API가 생기면 실제 요청으로 바꿉니다. 지금은 로딩 화면만 보여 줍니다.
+const SUBMIT_PREVIEW_MS = 1500;
+
+/** 앞 단계에서 미리 채워 둔 정보의 출처. 출처에 따라 안내 문구가 달라집니다. */
+export type PrefillSource = 'lastTutoring' | 'curriculum';
+
+const PREFILL_NOTICE: Record<PrefillSource, string> = {
+  lastTutoring: '지난 과외 계좌를 불러왔어요.',
+  curriculum: '커리큘럼에서 학생 정보, 교재, 요일을 채워두었어요',
+};
+
+// 프로필 이름과 같은 기준입니다. 넘치면 입력은 막지 않고 오류 문구를 보여 줍니다.
+const NAME_MAX_LENGTH = 10;
 
 const STEP = 2;
 const TOTAL_STEPS = 5;
@@ -32,17 +47,45 @@ function FieldLabel({ label, hint }: { label: string; hint?: string }) {
 }
 
 /** T-05 과외 만들기 · 학생 정보 (2/5 단계) */
-export function StudentInfoScreen() {
+export type StudentInfoScreenProps = {
+  /** 없으면 안내 메시지를 보여 주지 않습니다. */
+  prefillSource?: PrefillSource;
+};
+
+export function StudentInfoScreen({ prefillSource }: StudentInfoScreenProps) {
   const [name, setName] = useState('');
   const [grade, setGrade] = useState<Grade | null>(null);
+  const [otherGrade, setOtherGrade] = useState('');
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [otherSubject, setOtherSubject] = useState('');
 
   const toggleSubject = (subject: Subject) =>
     setSubjects((prev) =>
       prev.includes(subject) ? prev.filter((v) => v !== subject) : [...prev, subject],
     );
 
-  const canProceed = name.trim().length > 0 && grade !== null && subjects.length > 0;
+  const otherSelected = subjects.includes('기타');
+  const nameTooLong = name.trim().length > NAME_MAX_LENGTH;
+  const canProceed =
+    name.trim().length > 0 &&
+    !nameTooLong &&
+    grade !== null &&
+    (grade !== '기타' || otherGrade.trim().length > 0) &&
+    subjects.length > 0 &&
+    (!otherSelected || otherSubject.trim().length > 0);
+
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!canProceed || submitting) return;
+    setSubmitting(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, SUBMIT_PREVIEW_MS));
+      // TODO: 3단계 화면이 생기면 이동합니다.
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const back = () => {
     if (router.canGoBack()) router.back();
@@ -65,9 +108,11 @@ export function StudentInfoScreen() {
         <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
           <ProgressBar step={STEP} total={TOTAL_STEPS} stretch />
 
-          <View style={s.inlineMessage}>
-            <Text style={s.inlineMessageText}>지난 과외 계좌를 불러왔어요.</Text>
-          </View>
+          {prefillSource ? (
+            <View style={s.inlineMessage}>
+              <Text style={s.inlineMessageText}>{PREFILL_NOTICE[prefillSource]}</Text>
+            </View>
+          ) : null}
 
           <View style={s.form}>
             <View style={s.nameField}>
@@ -77,6 +122,7 @@ export function StudentInfoScreen() {
               <TextInput
                 value={name}
                 onChangeText={setName}
+                errorMessage={nameTooLong ? '글자 수가 초과되었어요' : undefined}
                 placeholder="학생 이름을 입력해 주세요"
                 accessibilityLabel="학생 이름"
                 returnKeyType="done"
@@ -99,6 +145,17 @@ export function StudentInfoScreen() {
                   />
                 ))}
               </View>
+              {grade === '기타' ? (
+                <View style={s.otherInput}>
+                  <TextInput
+                    value={otherGrade}
+                    onChangeText={setOtherGrade}
+                    placeholder="텍스트를 입력해주세요"
+                    accessibilityLabel="기타 학년"
+                    returnKeyType="done"
+                  />
+                </View>
+              ) : null}
             </View>
 
             <View style={s.selectField}>
@@ -116,14 +173,26 @@ export function StudentInfoScreen() {
                   />
                 ))}
               </View>
+              {otherSelected ? (
+                <View style={s.otherInput}>
+                  <TextInput
+                    value={otherSubject}
+                    onChangeText={setOtherSubject}
+                    placeholder="텍스트를 입력해주세요"
+                    accessibilityLabel="기타 과목"
+                    returnKeyType="done"
+                  />
+                </View>
+              ) : null}
             </View>
           </View>
         </ScrollView>
 
         <View style={s.cta}>
-          <ActionButton label="다음" disabled={!canProceed} />
+          <ActionButton label="다음" disabled={!canProceed} loading={submitting} onPress={submit} />
         </View>
       </View>
+      <Loading visible={submitting} />
     </SafeAreaView>
   );
 }
@@ -173,6 +242,8 @@ const s = StyleSheet.create({
   },
   required: { color: semantic.text.brand.assistive },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: gap[8] },
+  // 디자인에서 칩 묶음과 입력칸 사이가 10px입니다 (gap 8 + 2).
+  otherInput: { marginTop: unit[2] },
   cta: {
     paddingHorizontal: padding[24],
     paddingTop: padding[20],
