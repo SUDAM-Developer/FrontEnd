@@ -21,6 +21,8 @@ export type ActionButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   label: string;
   /** L: 가로 꽉 참, M: 96, S: 72 */
   size?: ActionButtonSize;
+  /** 높이·글자 크기는 유지하고 부모 너비를 채웁니다. */
+  fullWidth?: boolean;
   variant?: ActionButtonVariant;
   /** primary 버튼의 기본 파란색 농도. strong은 진한 파란색을 사용합니다. */
   tone?: 'default' | 'strong';
@@ -54,6 +56,7 @@ const variants = {
 export function ActionButton({
   label,
   size = 'L',
+  fullWidth = false,
   variant = 'primary',
   tone = 'default',
   disabled,
@@ -81,7 +84,12 @@ export function ActionButton({
       disabled={disabled || loading}
       aria-disabled={disabled || loading || undefined}
       aria-busy={loading || undefined}
-      style={({ pressed }) => [s.base, sizes[size], { backgroundColor: background(pressed) }]}
+      style={({ pressed }) => [
+        s.base,
+        sizes[size],
+        fullWidth && s.fullWidth,
+        { backgroundColor: background(pressed) },
+      ]}
     >
       {loading ? (
         <Image source={v.dots} style={s.dots} loading="eager" />
@@ -107,6 +115,7 @@ export function ActionButton({
 }
 
 const s = StyleSheet.create({
+  fullWidth: { width: '100%' },
   base: {
     alignItems: 'center',
     justifyContent: 'center',

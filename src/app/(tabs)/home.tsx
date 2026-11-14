@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, useLocalSearchParams, useRouter } from 'expo-router';
 import { HomeScreen } from '@/features/home/HomeScreen';
 import { homePreviewData } from '@/features/home/previewData';
 import { CAN_PREVIEW } from '@/config/review';
@@ -9,10 +9,29 @@ import type { HomeLesson } from '@/features/home/types';
 import { ActionButton } from '@/components/ActionButton';
 export default function Screen() {
   const router = useRouter();
+  const { preview } = useLocalSearchParams<{ preview?: string }>();
+  const [finishedPreview, setFinishedPreview] = useState<string | null>(null);
+  const previewLoading = CAN_PREVIEW && (preview === 'loading' || preview === 'fast');
+  const loading = previewLoading && finishedPreview !== preview;
+  useEffect(() => {
+    if (!previewLoading) return;
+    const timer = setTimeout(() => setFinishedPreview(preview!), preview === 'fast' ? 100 : 3000);
+    return () => clearTimeout(timer);
+  }, [preview, previewLoading]);
   const { profile } = useOnboarding();
   const [notice, setNotice] = useState<string | null>(null);
   const data = CAN_PREVIEW
-    ? homePreviewData
+    ? preview === 'empty'
+      ? {
+          ...homePreviewData,
+          teacherLabel: 'OOO 선생님 · 영어',
+          lessons: [],
+          tasks: homePreviewData.tasks.map((task) => ({
+            ...task,
+            count: task.id === 'income' ? 3 : task.count,
+          })),
+        }
+      : homePreviewData
     : {
         teacherLabel: `${profile.name} 선생님${profile.subjects.length ? ` · ${profile.subjects.join(' · ')}` : ''}`,
         dateLabel: new Intl.DateTimeFormat('ko-KR', {
@@ -33,6 +52,8 @@ export default function Screen() {
       <Tabs.Screen options={{ headerShown: false }} />
       <HomeScreen
         data={data}
+        loading={loading}
+        onStudents={() => router.push('/students')}
         onProfile={() => router.push('/settings')}
         onRecord={record}
         onInstallInfo={() =>
