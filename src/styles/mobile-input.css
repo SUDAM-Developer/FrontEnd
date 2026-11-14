@@ -1,0 +1,9 @@
+/* iOS의 작은 입력 글자 자동 확대 방지. 사용자의 핀치 확대는 유지합니다. */
+@media (hover: none) and (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+}
