@@ -66,8 +66,8 @@ export function TextbookScreen({ prefillSource }: TextbookScreenProps) {
         label="지금 진도"
         required={false}
         value={currentProgress}
-        onChangeText={(text) => setCurrentProgress(text.replace(/[^0-9]/g, ''))}
-        keyboardType="number-pad"
+        onChangeText={setCurrentProgress}
+        keyboardType="default"
         placeholder="지금 진도"
         helperText="교재 내용은 저장하지 않고, 이름과 진도 단위만 써요."
       />
