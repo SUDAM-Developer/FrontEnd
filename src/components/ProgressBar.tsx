@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { semantic } from '@/styles/colors';
-import { gap, radius } from '@/styles/measurement';
+import { gap, padding, radius } from '@/styles/measurement';
 import { fontSize, fontWeight, letterSpacing, lineHeight } from '@/styles/typography';
 
 const SEGMENT_WIDTH = 54;
@@ -13,9 +13,11 @@ export type ProgressBarProps = {
   total: number;
   /** 막대 아래 `step/total` 표시 여부 */
   showLabel?: boolean;
+  /** true면 막대가 부모 너비를 꽉 채우고 칸 너비를 나눠 가집니다. */
+  stretch?: boolean;
 };
 
-export function ProgressBar({ step, total, showLabel = true }: ProgressBarProps) {
+export function ProgressBar({ step, total, showLabel = true, stretch = false }: ProgressBarProps) {
   const current = Math.min(Math.max(step, 0), total);
 
   return (
@@ -25,11 +27,14 @@ export function ProgressBar({ step, total, showLabel = true }: ProgressBarProps)
       aria-valuemax={total}
       aria-valuenow={current}
       aria-valuetext={`${current}/${total}`}
-      style={s.root}
+      style={[s.root, stretch && s.rootStretch]}
     >
-      <View style={s.track}>
+      <View style={[s.track, stretch && s.trackStretch]}>
         {Array.from({ length: total }, (_, i) => (
-          <View key={i} style={[s.segment, i < current && s.segmentFilled]} />
+          <View
+            key={i}
+            style={[s.segment, stretch && s.segmentStretch, i < current && s.segmentFilled]}
+          />
         ))}
       </View>
       {showLabel ? (
@@ -43,13 +48,16 @@ export function ProgressBar({ step, total, showLabel = true }: ProgressBarProps)
 
 const s = StyleSheet.create({
   root: { alignItems: 'center', gap: gap[12] },
+  rootStretch: { alignSelf: 'stretch', paddingVertical: padding[4] },
   track: { flexDirection: 'row', gap: gap[2] },
+  trackStretch: { alignSelf: 'stretch', paddingHorizontal: padding[4] },
   segment: {
     width: SEGMENT_WIDTH,
     height: SEGMENT_HEIGHT,
     borderRadius: radius.small,
     backgroundColor: semantic.surface.disabled,
   },
+  segmentStretch: { flex: 1, width: undefined },
   segmentFilled: { backgroundColor: semantic.icon.brand },
   label: {
     fontSize: fontSize[12],
