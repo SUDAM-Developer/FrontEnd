@@ -63,8 +63,19 @@ export function useSubmit(onDone: () => void, request: () => Promise<void> = pre
   return { submitting, failed, submit };
 }
 
+/** 앞 단계에서 정보를 불러왔다고 알려 주는 파란 안내 상자 */
+export function PrefillNotice({ source }: { source: PrefillSource }) {
+  return (
+    <View style={s.inlineMessage}>
+      <Text style={s.inlineMessageText}>{PREFILL_NOTICE[source]}</Text>
+    </View>
+  );
+}
+
 export type TutoringFormLayoutProps = {
   step: number;
+  /** 진행 막대 아래에 보여 줄 화면 제목 (예: 정산방식) */
+  heading?: string;
   /** 없으면 안내 메시지를 보여 주지 않습니다. */
   prefillSource?: PrefillSource;
   canProceed: boolean;
@@ -76,12 +87,15 @@ export type TutoringFormLayoutProps = {
   loadingOverlay?: boolean;
   /** 값이 있으면 하단 버튼 위에 토스트로 보여 줍니다. */
   toast?: string;
+  /** 하단 버튼 바로 위에 보여 줄 작은 안내 문구 */
+  helpText?: string;
   children: ReactNode;
 };
 
 /** 과외 만들기 단계 화면의 공통 틀 (헤더, 진행 막대, 안내 메시지, 다음 버튼, 로딩) */
 export function TutoringFormLayout({
   step,
+  heading,
   prefillSource,
   canProceed,
   submitting,
@@ -89,6 +103,7 @@ export function TutoringFormLayout({
   ctaLabel = '다음',
   loadingOverlay = true,
   toast,
+  helpText,
   children,
 }: TutoringFormLayoutProps) {
   const back = () => {
@@ -112,13 +127,15 @@ export function TutoringFormLayout({
         <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
           <ProgressBar step={step} total={TOTAL_STEPS} stretch />
 
-          {prefillSource ? (
-            <View style={s.inlineMessage}>
-              <Text style={s.inlineMessageText}>{PREFILL_NOTICE[prefillSource]}</Text>
-            </View>
+          {heading ? (
+            <Text role="heading" style={s.heading}>
+              {heading}
+            </Text>
           ) : null}
 
-          <View style={s.form}>{children}</View>
+          {prefillSource ? <PrefillNotice source={prefillSource} /> : null}
+
+          <View style={[s.form, heading && s.formUnderHeading]}>{children}</View>
         </ScrollView>
 
         <View style={s.cta}>
@@ -129,6 +146,7 @@ export function TutoringFormLayout({
               </View>
             </View>
           ) : null}
+          {helpText ? <Text style={s.helpText}>{helpText}</Text> : null}
           <ActionButton
             label={ctaLabel}
             disabled={!canProceed}
@@ -178,7 +196,16 @@ const s = StyleSheet.create({
     ...typography.caption[1].medium,
     color: semantic.text.brand.assistive,
   },
+  // 진행 막대와 제목 사이는 12px입니다. (content gap 8 + 4)
+  heading: {
+    ...typography.heading[1].bold,
+    color: semantic.text.default.strong,
+    paddingTop: padding[4],
+    paddingBottom: padding[12],
+  },
   form: { paddingVertical: padding[12], gap: gap[20] },
+  // 제목 바로 아래에서 입력 묶음이 시작합니다. (content gap 8을 빼서 0으로 맞춥니다)
+  formUnderHeading: { paddingTop: 0, marginTop: -gap[8] },
   // 토스트 아래쪽이 버튼 위쪽에서 12px 떨어지도록 CTA 위로 띄웁니다. (토스트 32 + 12 - CTA 위 여백 20)
   toastSlot: { position: 'absolute', top: -24, left: 0, right: 0, alignItems: 'center' },
   toast: {
@@ -191,7 +218,13 @@ const s = StyleSheet.create({
     elevation: 6,
   },
   toastText: { ...typography.caption[1].regular, color: semantic.text.default.inverse },
+  helpText: {
+    ...typography.caption[1].medium,
+    color: semantic.text.default.weak,
+    textAlign: 'center',
+  },
   cta: {
+    gap: gap[12],
     paddingHorizontal: padding[24],
     paddingTop: padding[20],
     paddingBottom: padding[20],
