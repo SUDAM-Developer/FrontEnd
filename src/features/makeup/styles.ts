@@ -19,7 +19,12 @@ export const s = StyleSheet.create({
     borderTopRightRadius: radius.large,
     paddingHorizontal: padding[24],
   },
+  formScroll: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
+  fixedHeading: { flexShrink: 0 },
+  pickerBody: { flexShrink: 1, minHeight: 0 },
+  calendarDays: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
   handle: {
+    flexShrink: 0,
     width: 56,
     height: 4,
     backgroundColor: c.border.default,
@@ -31,7 +36,7 @@ export const s = StyleSheet.create({
   heading: { ...t.heading[1].semiBold, color: c.text.default.strong, marginBottom: gap[8] },
   description: { ...t.body[4].regular, color: c.text.default.weak, marginBottom: gap[16] },
   content: { paddingBottom: padding[12] },
-  actions: { gap: gap[8], paddingTop: padding[12] },
+  actions: { flexShrink: 0, gap: gap[8], paddingTop: padding[12] },
   actionSpacing: { height: 32 },
   candidate: { marginBottom: gap[12] },
   candidateHeading: {
@@ -115,7 +120,7 @@ export const s = StyleSheet.create({
   },
   selectedTime: { backgroundColor: c.surface.focused },
   timeOptionText: { ...t.body[3].medium, color: c.text.default.normal },
-  timeList: { maxHeight: 300 },
+  timeList: { maxHeight: 300, flexGrow: 0, flexShrink: 1, minHeight: 0 },
   preview: {
     flex: 1,
     alignItems: 'center',

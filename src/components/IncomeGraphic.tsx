@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import type { ImageProps } from 'expo-image';
-import graphic from '../../assets/images/income-graphic.png';
+import graphic from '../../assets/images/income-graphic.svg';
 
 type Props = {
   size?: number;
