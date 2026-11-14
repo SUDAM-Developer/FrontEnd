@@ -7,6 +7,7 @@ import { CAN_PREVIEW } from '@/config/review';
 import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
 import type { HomeLesson } from '@/features/home/types';
 import { ActionButton } from '@/components/ActionButton';
+import { InstallSheet } from '@/features/home/InstallSheet';
 export default function Screen() {
   const router = useRouter();
   const { preview } = useLocalSearchParams<{ preview?: string }>();
@@ -19,6 +20,7 @@ export default function Screen() {
     return () => clearTimeout(timer);
   }, [preview, previewLoading]);
   const { profile } = useOnboarding();
+  const [installOpen, setInstallOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const data = CAN_PREVIEW
     ? preview === 'empty'
@@ -66,13 +68,14 @@ export default function Screen() {
         onStudents={() => router.push('/students')}
         onProfile={() => router.push('/settings')}
         onRecord={record}
-        onInstallInfo={() => setNotice('홈 화면 추가 및 알림 안내는 준비 중이에요.')}
+        onInstallInfo={() => setInstallOpen(true)}
         onTask={(task) => {
           if (task.id === 'income') router.push('/income');
           else if (task.id === 'records' && data.lessons[0]) record(data.lessons[0]);
           else setNotice('해당 기능은 아직 연결되지 않았어요.');
         }}
       />
+      {installOpen && <InstallSheet onClose={() => setInstallOpen(false)} />}
       <Modal
         visible={notice !== null}
         transparent
