@@ -1,6 +1,6 @@
 import arrowBackImage from '../../../assets/images/arrow_back.svg';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,83 +51,87 @@ export function StudentInfoScreen() {
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={s.safe}>
-      <View style={s.navBar}>
-        <Pressable role="button" accessibilityLabel="뒤로 가기" onPress={back} hitSlop={8}>
-          <Image source={arrowBackImage} style={s.icon} />
-        </Pressable>
-        <Text role="heading" style={s.title}>
-          과외 만들기
-        </Text>
-        <View style={s.icon} />
-      </View>
-
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        <ProgressBar step={STEP} total={TOTAL_STEPS} stretch />
-
-        <View style={s.inlineMessage}>
-          <Text style={s.inlineMessageText}>지난 과외 계좌를 불러왔어요.</Text>
+      <View style={s.phone}>
+        <View style={s.navBar}>
+          <Pressable role="button" accessibilityLabel="뒤로 가기" onPress={back} hitSlop={8}>
+            <Image source={arrowBackImage} style={s.icon} />
+          </Pressable>
+          <Text role="heading" style={s.title}>
+            과외 만들기
+          </Text>
+          <View style={s.icon} />
         </View>
 
-        <View style={s.form}>
-          <View style={s.nameField}>
-            <View style={s.nameLabel}>
-              <FieldLabel label="학생 이름" />
-            </View>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="학생 이름을 입력해 주세요"
-              accessibilityLabel="학생 이름"
-              returnKeyType="done"
-            />
+        <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+          <ProgressBar step={STEP} total={TOTAL_STEPS} stretch />
+
+          <View style={s.inlineMessage}>
+            <Text style={s.inlineMessageText}>지난 과외 계좌를 불러왔어요.</Text>
           </View>
 
-          <View style={s.selectField}>
-            <View style={s.selectLabel}>
-              <FieldLabel label="학생 학년" />
+          <View style={s.form}>
+            <View style={s.nameField}>
+              <View style={s.nameLabel}>
+                <FieldLabel label="학생 이름" />
+              </View>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="학생 이름을 입력해 주세요"
+                accessibilityLabel="학생 이름"
+                returnKeyType="done"
+              />
             </View>
-            <View role="radiogroup" accessibilityLabel="학생 학년" style={s.chips}>
-              {GRADES.map((g) => (
-                <Chip
-                  key={g}
-                  label={g}
-                  muted
-                  role="radio"
-                  selected={grade === g}
-                  onPress={() => setGrade(g)}
-                />
-              ))}
-            </View>
-          </View>
 
-          <View style={s.selectField}>
-            <View style={s.selectLabel}>
-              <FieldLabel label="과목" hint="(복수 선택 가능)" />
+            <View style={s.selectField}>
+              <View style={s.selectLabel}>
+                <FieldLabel label="학생 학년" />
+              </View>
+              <View role="radiogroup" accessibilityLabel="학생 학년" style={s.chips}>
+                {GRADES.map((g) => (
+                  <Chip
+                    key={g}
+                    label={g}
+                    muted
+                    role="radio"
+                    selected={grade === g}
+                    onPress={() => setGrade(g)}
+                  />
+                ))}
+              </View>
             </View>
-            <View role="group" accessibilityLabel="과목" style={s.chips}>
-              {SUBJECTS.map((subject) => (
-                <Chip
-                  key={subject}
-                  label={subject}
-                  muted
-                  selected={subjects.includes(subject)}
-                  onPress={() => toggleSubject(subject)}
-                />
-              ))}
+
+            <View style={s.selectField}>
+              <View style={s.selectLabel}>
+                <FieldLabel label="과목" hint="(복수 선택 가능)" />
+              </View>
+              <View role="group" accessibilityLabel="과목" style={s.chips}>
+                {SUBJECTS.map((subject) => (
+                  <Chip
+                    key={subject}
+                    label={subject}
+                    muted
+                    selected={subjects.includes(subject)}
+                    onPress={() => toggleSubject(subject)}
+                  />
+                ))}
+              </View>
             </View>
           </View>
+        </ScrollView>
+
+        <View style={s.cta}>
+          <ActionButton label="다음" disabled={!canProceed} />
         </View>
-      </ScrollView>
-
-      <View style={s.cta}>
-        <ActionButton label="다음" disabled={!canProceed} />
       </View>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: semantic.surface.input },
+  safe: { flex: 1, alignItems: 'center', backgroundColor: semantic.surface.input },
+  // 웹에서는 휴대폰 너비(390)로 가운데 정렬하고, 상태바 높이만큼 위를 띄웁니다.
+  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
   navBar: {
     flexDirection: 'row',
     alignItems: 'center',
