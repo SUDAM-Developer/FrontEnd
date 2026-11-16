@@ -1,9 +1,28 @@
 import { StyleSheet } from 'react-native';
 import { semantic as c } from '@/styles/colors';
 import { typography as t } from '@/styles/typography';
-import { gap, padding, radius } from '@/styles/measurement';
+import { gap, grid, padding, radius } from '@/styles/measurement';
 
 export const s = StyleSheet.create({
+  safe: { flex: 1, alignItems: 'center', backgroundColor: c.surface.input },
+  phone: { flex: 1, width: '100%', maxWidth: 390 },
+  header: { height: 52, justifyContent: 'center', paddingHorizontal: grid.margin },
+  title: { ...t.heading[1].semiBold, color: c.text.default.strong },
+  scroll: { flex: 1 },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: grid.margin,
+    paddingTop: padding[12],
+    paddingBottom: padding[16],
+  },
+  list: { gap: gap[8] },
+  error: {
+    padding: padding[24],
+    backgroundColor: c.surface.subtle,
+    borderRadius: radius.medium,
+    gap: gap[16],
+  },
+  errorText: { ...t.body[4].regular, color: c.text.default.weak },
   card: {
     gap: gap[8],
     padding: padding[16],
