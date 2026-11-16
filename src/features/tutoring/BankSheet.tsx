@@ -31,12 +31,16 @@ import { typography } from '@/styles/typography';
 
 type BankInfo = {
   name: string;
-  logo: number;
+  /** 로고가 없으면 이름 첫 글자를 대신 보여 줍니다. */
+  logo?: number;
   /** 디자인에서 로고를 칸에 맞추는 방식입니다. 대부분 cover, 일부 로고는 contain입니다. */
   fit?: 'cover' | 'contain';
 };
 
-/** 디자인(T-07 은행선택 바텀시트)에 있는 순서 그대로입니다. 전북은 디자인에서 광주 로고를 씁니다. */
+/**
+ * 입력값 규칙의 은행 목록 순서입니다. 전북은 디자인에서 광주 로고를 씁니다.
+ * TODO: 기타는 디자인에 없어 로고 대신 이름 첫 글자를 보여 줍니다. 로고가 나오면 바꿉니다.
+ */
 export const BANKS = [
   { name: '국민', logo: kookminLogo, fit: 'contain' },
   { name: '신한', logo: shinhanLogo },
@@ -61,9 +65,13 @@ export const BANKS = [
   { name: '우체국', logo: postLogo },
   { name: '저축은행', logo: savingsLogo },
   { name: '산림조합', logo: nfcfLogo },
+  { name: '기타' },
 ] as const satisfies readonly BankInfo[];
 
 export type Bank = (typeof BANKS)[number]['name'];
+
+/** '기타'를 고르면 은행 이름을 직접 입력합니다. */
+export const OTHER_BANK = '기타' satisfies Bank;
 
 /** "국민은행"처럼 "은행"을 붙여 검색해도 찾을 수 있게 공백과 "은행"을 빼고 비교합니다. */
 const normalize = (text: string) => text.replace(/\s|은행/g, '').toLowerCase();
@@ -141,12 +149,16 @@ export function BankSheet({ visible, selected, onSelect, onClose }: BankSheetPro
                       onPress={() => select(bank.name)}
                       style={({ pressed }) => [s.cell, s.bank, pressed && s.bankPressed]}
                     >
-                      <View style={s.logoBox}>
-                        <Image
-                          source={bank.logo}
-                          contentFit={'fit' in bank ? bank.fit : 'cover'}
-                          style={s.logo}
-                        />
+                      <View style={[s.logoBox, !('logo' in bank) && s.logoFallback]}>
+                        {'logo' in bank ? (
+                          <Image
+                            source={bank.logo}
+                            contentFit={'fit' in bank ? bank.fit : 'cover'}
+                            style={s.logo}
+                          />
+                        ) : (
+                          <Text style={s.logoFallbackText}>{bank.name.slice(0, 1)}</Text>
+                        )}
                       </View>
                       <Text
                         numberOfLines={1}
@@ -228,6 +240,12 @@ const s = StyleSheet.create({
     backgroundColor: semantic.surface.input,
   },
   logo: { width: LOGO_SIZE, height: LOGO_SIZE },
+  logoFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: semantic.surface.default,
+  },
+  logoFallbackText: { ...typography.body[4].semiBold, color: semantic.text.default.weak },
   bankName: {
     ...typography.caption[1].semiBold,
     height: 24,

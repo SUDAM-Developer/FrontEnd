@@ -7,13 +7,14 @@ import { Chip } from '@/components/Chip';
 import { semantic } from '@/styles/colors';
 import { gap, lineWeight, padding, radius } from '@/styles/measurement';
 import { typography } from '@/styles/typography';
-import { BankSheet } from './BankSheet';
+import { TextInput } from '@/components/TextInput';
+import { BankSheet, OTHER_BANK } from './BankSheet';
 import type { Bank } from './BankSheet';
-import { FieldLabel, TextField } from './FormFields';
+import { FieldLabel, TOO_LONG_MESSAGE, TextField, isTooLong } from './FormFields';
 import { PrefillNotice, TutoringFormLayout } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
 
-const CYCLES = ['4회차', '8회차', '직접'] as const;
+const CYCLES = ['4회차', '8회차', '12회차', '직접'] as const;
 const TIMINGS = ['선불', '후불'] as const;
 
 type Cycle = (typeof CYCLES)[number];
@@ -21,7 +22,19 @@ type Timing = (typeof TIMINGS)[number];
 
 const FEE_SUFFIX = '원';
 
+// 입력값 규칙
+const CUSTOM_CYCLE_MIN = 1;
+const CUSTOM_CYCLE_MAX = 20;
+const FEE_MIN = 10_000;
+const FEE_MAX = 10_000_000;
+const BANK_NAME_MAX = 20;
+const ACCOUNT_DIGITS_MIN = 10;
+const ACCOUNT_DIGITS_MAX = 14;
+const HOLDER_MAX = 20;
+
 const onlyDigits = (text: string) => text.replace(/[^0-9]/g, '');
+
+const inRange = (value: number, min: number, max: number) => value >= min && value <= max;
 
 /** "360000" → "360,000원" */
 const formatFee = (digits: string) =>
@@ -35,12 +48,19 @@ export type SettlementScreenProps = {
 /** T-07 과외 만들기 · 정산 조건 · 입금 계좌 (4/5 단계) */
 export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
   const [cycle, setCycle] = useState<Cycle | null>(null);
+  const [customCycle, setCustomCycle] = useState('');
   const [timing, setTiming] = useState<Timing | null>(null);
   const [fee, setFee] = useState('');
   const [bank, setBank] = useState<Bank | null>(null);
+  const [otherBankName, setOtherBankName] = useState('');
   const [bankOpen, setBankOpen] = useState(false);
+  /** 하이픈 입력을 허용합니다. 저장할 때는 숫자만 씁니다(accountDigits). */
   const [accountNumber, setAccountNumber] = useState('');
   const [holder, setHolder] = useState('');
+  /** 범위 오류는 입력을 마친 뒤(포커스가 빠진 뒤)에 보여 줍니다. */
+  const [touched, setTouched] = useState({ cycle: false, fee: false, account: false });
+  const touch = (field: keyof typeof touched) =>
+    setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }));
 
   const changeFee = (text: string) => {
     const digits = onlyDigits(text);
@@ -52,15 +72,40 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
     setFee(digits.replace(/^0+/, ''));
   };
 
-  const canProceed =
+  const cycleValid =
     cycle !== null &&
-    timing !== null &&
-    fee.length > 0 &&
+    (cycle !== '직접' ||
+      (customCycle.length > 0 && inRange(Number(customCycle), CUSTOM_CYCLE_MIN, CUSTOM_CYCLE_MAX)));
+  const feeValid = fee.length > 0 && inRange(Number(fee), FEE_MIN, FEE_MAX);
+  // '기타'를 골랐는데 은행 이름이 비어 있으면 고르지 않은 것으로 봅니다.
+  const otherBankNameTooLong = isTooLong(otherBankName, BANK_NAME_MAX);
+  const bankValid =
     bank !== null &&
-    accountNumber.length > 0 &&
-    holder.trim().length > 0;
+    (bank !== OTHER_BANK || (otherBankName.trim().length > 0 && !otherBankNameTooLong));
+  const accountDigits = onlyDigits(accountNumber);
+  const accountValid = inRange(accountDigits.length, ACCOUNT_DIGITS_MIN, ACCOUNT_DIGITS_MAX);
+  const holderTooLong = isTooLong(holder, HOLDER_MAX);
+  const holderValid = holder.trim().length > 0 && !holderTooLong;
+
+  const cycleError =
+    touched.cycle && cycle === '직접' && customCycle.length > 0 && !cycleValid
+      ? `${CUSTOM_CYCLE_MIN}~${CUSTOM_CYCLE_MAX}회 사이로 입력해 주세요`
+      : undefined;
+  const feeError =
+    touched.fee && fee.length > 0 && !feeValid
+      ? `${FEE_MIN.toLocaleString('ko-KR')}원 ~ ${FEE_MAX.toLocaleString('ko-KR')}원 사이로 입력해 주세요`
+      : undefined;
+  const accountError =
+    (touched.account && accountDigits.length > 0 && !accountValid) ||
+    accountDigits.length > ACCOUNT_DIGITS_MAX
+      ? `계좌번호는 숫자 ${ACCOUNT_DIGITS_MIN}~${ACCOUNT_DIGITS_MAX}자리예요`
+      : undefined;
+
+  const canProceed =
+    cycleValid && timing !== null && feeValid && bankValid && accountValid && holderValid;
 
   // TODO: 입력한 정산 조건과 계좌를 다음 단계로 넘기거나 저장합니다.
+  // 계좌번호는 숫자만(accountDigits), 은행이 '기타'면 otherBankName.trim()을 저장합니다.
   const handleNext = () => router.push('/tutoring/invite');
 
   return (
@@ -103,14 +148,29 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
               ))}
             </View>
           </View>
+          {cycle === '직접' ? (
+            <TextInput
+              value={customCycle}
+              onChangeText={(text) => setCustomCycle(onlyDigits(text).replace(/^0+/, ''))}
+              onBlur={() => touch('cycle')}
+              keyboardType="number-pad"
+              maxLength={2}
+              placeholder={`정산 회차를 입력해 주세요 (${CUSTOM_CYCLE_MIN}~${CUSTOM_CYCLE_MAX}회)`}
+              accessibilityLabel="정산 회차 직접 입력"
+              returnKeyType="done"
+              errorMessage={cycleError}
+            />
+          ) : null}
         </View>
 
         <TextField
           label="수업료 (정산 1회당)"
           value={formatFee(fee)}
           onChangeText={changeFee}
+          onBlur={() => touch('fee')}
           keyboardType="number-pad"
           placeholder="수업료를 입력해 주세요"
+          errorMessage={feeError}
         />
 
         <View style={s.section}>
@@ -136,20 +196,33 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
                 </Text>
                 <Image source={arrowDownImage} style={s.arrow} />
               </Pressable>
+              {bank === OTHER_BANK ? (
+                <TextInput
+                  value={otherBankName}
+                  onChangeText={setOtherBankName}
+                  placeholder="은행 이름을 입력해 주세요"
+                  accessibilityLabel="은행 이름"
+                  returnKeyType="done"
+                  errorMessage={otherBankNameTooLong ? TOO_LONG_MESSAGE : undefined}
+                />
+              ) : null}
             </View>
 
             <TextField
               label="계좌번호"
               value={accountNumber}
-              onChangeText={(text) => setAccountNumber(onlyDigits(text))}
+              onChangeText={(text) => setAccountNumber(text.replace(/[^0-9-]/g, ''))}
+              onBlur={() => touch('account')}
               keyboardType="number-pad"
               placeholder="계좌 번호를 입력해 주세요"
+              errorMessage={accountError}
             />
             <TextField
               label="예금주"
               value={holder}
               onChangeText={setHolder}
               placeholder="예금주를 입력해 주세요"
+              errorMessage={holderTooLong ? TOO_LONG_MESSAGE : undefined}
             />
           </View>
         </View>
