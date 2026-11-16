@@ -8,7 +8,7 @@ import { semantic } from '@/styles/colors';
 import { gap, lineWeight, padding, radius } from '@/styles/measurement';
 import { typography } from '@/styles/typography';
 import { FieldLabel, TextField } from './FormFields';
-import { PrefillNotice, TutoringFormLayout, useSubmit } from './TutoringFormLayout';
+import { PrefillNotice, TutoringFormLayout } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
 
 const CYCLES = ['4회차', '8회차', '직접'] as const;
@@ -72,15 +72,15 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
     holder.trim().length > 0;
 
   // TODO: 입력한 정산 조건과 계좌를 다음 단계로 넘기거나 저장합니다.
-  const { submitting, submit } = useSubmit(() => router.push('/tutoring/invite'));
+  const handleNext = () => router.push('/tutoring/invite');
 
   return (
     <TutoringFormLayout
       step={4}
       heading="정산방식"
       canProceed={canProceed}
-      submitting={submitting}
-      onNext={submit}
+      submitting={false}
+      onNext={handleNext}
       helpText="수업료는 선생님 계좌로 바로 입금돼요. 수담은 돈을 대신 받지 않아요."
     >
       <View style={s.sections}>
