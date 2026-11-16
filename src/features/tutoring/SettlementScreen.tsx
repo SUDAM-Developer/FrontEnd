@@ -7,28 +7,17 @@ import { Chip } from '@/components/Chip';
 import { semantic } from '@/styles/colors';
 import { gap, lineWeight, padding, radius } from '@/styles/measurement';
 import { typography } from '@/styles/typography';
+import { BankSheet } from './BankSheet';
+import type { Bank } from './BankSheet';
 import { FieldLabel, TextField } from './FormFields';
 import { PrefillNotice, TutoringFormLayout } from './TutoringFormLayout';
 import type { PrefillSource } from './TutoringFormLayout';
 
 const CYCLES = ['4회차', '8회차', '직접'] as const;
 const TIMINGS = ['선불', '후불'] as const;
-// TODO: 은행 선택 바텀시트 디자인이 나오면 바꿉니다. 지금은 입력칸 아래에 목록을 펼칩니다.
-const BANKS = [
-  'KB국민',
-  '신한',
-  '우리',
-  '하나',
-  'NH농협',
-  'IBK기업',
-  '카카오뱅크',
-  '토스뱅크',
-  '케이뱅크',
-] as const;
 
 type Cycle = (typeof CYCLES)[number];
 type Timing = (typeof TIMINGS)[number];
-type Bank = (typeof BANKS)[number];
 
 const FEE_SUFFIX = '원';
 
@@ -139,7 +128,7 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
                 role="combobox"
                 accessibilityLabel="은행"
                 aria-expanded={bankOpen}
-                onPress={() => setBankOpen((open) => !open)}
+                onPress={() => setBankOpen(true)}
                 style={[s.select, bankOpen && s.selectOpen]}
               >
                 <Text style={[s.selectText, bank && s.selectTextFilled]}>
@@ -147,26 +136,6 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
                 </Text>
                 <Image source={arrowDownImage} style={s.arrow} />
               </Pressable>
-              {bankOpen ? (
-                <View role="list" accessibilityLabel="은행 목록" style={s.options}>
-                  {BANKS.map((option) => (
-                    <Pressable
-                      key={option}
-                      role="option"
-                      aria-selected={bank === option}
-                      onPress={() => {
-                        setBank(option);
-                        setBankOpen(false);
-                      }}
-                      style={({ pressed }) => [s.option, pressed && s.optionPressed]}
-                    >
-                      <Text style={[s.optionText, bank === option && s.optionTextSelected]}>
-                        {option}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              ) : null}
             </View>
 
             <TextField
@@ -185,6 +154,15 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
           </View>
         </View>
       </View>
+      <BankSheet
+        visible={bankOpen}
+        selected={bank}
+        onSelect={(next) => {
+          setBank(next);
+          setBankOpen(false);
+        }}
+        onClose={() => setBankOpen(false)}
+      />
     </TutoringFormLayout>
   );
 }
@@ -219,15 +197,4 @@ const s = StyleSheet.create({
   selectTextFilled: { color: semantic.text.default.normal },
   // 디자인에서 16px 아이콘을 26px 칸에 맞춰 키워 씁니다.
   arrow: { width: 26, height: 26 },
-  options: {
-    borderRadius: radius.small,
-    borderWidth: lineWeight.regular,
-    borderColor: semantic.border.default,
-    backgroundColor: semantic.surface.input,
-    overflow: 'hidden',
-  },
-  option: { paddingVertical: padding[12], paddingHorizontal: padding[12] },
-  optionPressed: { backgroundColor: semantic.surface.default },
-  optionText: { ...typography.body[4].medium, color: semantic.text.default.normal },
-  optionTextSelected: { color: semantic.text.brand.assistive },
 });
