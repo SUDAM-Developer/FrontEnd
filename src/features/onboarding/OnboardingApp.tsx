@@ -184,7 +184,6 @@ const s = StyleSheet.create({
     maxWidth: 390,
     backgroundColor: '#fff',
     flex: 1,
-    paddingTop: Platform.OS === 'web' ? 44 : 0,
   },
   smallLink: { color: '#9a9fac', fontSize: 12 },
   header: { height: 54, alignItems: 'center', justifyContent: 'center' },

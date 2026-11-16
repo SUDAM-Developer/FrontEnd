@@ -1,3 +1,4 @@
+import './inputAutofill';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { TextInput as RNTextInput, StyleSheet, Text, View } from 'react-native';

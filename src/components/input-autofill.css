@@ -1,0 +1,22 @@
+/* 자동완성 기능은 유지하고 브라우저 기본 강조 배경만 입력창 색상에 맞춥니다. */
+input[autocomplete='name'] {
+  --autofill-background: #fbfbff;
+  --autofill-text: #2d303d;
+}
+input[autocomplete='name']:focus,
+input[autocomplete='name'][aria-invalid='true'] {
+  --autofill-background: #fff;
+}
+input[autocomplete='name'][aria-invalid='true'] {
+  --autofill-text: #ff6723;
+}
+input[autocomplete='name']:autofill {
+  box-shadow: 0 0 0 1000px var(--autofill-background) inset !important;
+  -webkit-text-fill-color: var(--autofill-text) !important;
+  caret-color: var(--autofill-text);
+}
+input[autocomplete='name']:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--autofill-background) inset !important;
+  -webkit-text-fill-color: var(--autofill-text) !important;
+  caret-color: var(--autofill-text);
+}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ActionButton } from '@/components/ActionButton';
@@ -185,7 +185,7 @@ export default function TermsScreen({ onSave, documents, initialChecked = false 
 
 const s = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: semantic.surface.input, alignItems: 'center' },
-  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  phone: { flex: 1, width: '100%', maxWidth: 390 },
   header: { height: 72, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { ...typography.body[1].semiBold, color: semantic.text.default.strong },
   back: {

@@ -33,7 +33,7 @@ export function MainTabBar({
   insets,
 }: BottomTabBarProps) {
   return (
-    <View role="tablist" style={[s.bar, { paddingBottom: padding[16] + insets.bottom }]}>
+    <View role="tablist" style={[s.bar, { paddingBottom: Math.max(padding[8], insets.bottom) }]}>
       {state.routes.map((route, index) => {
         const focused = index === state.index;
         const icon = icons[route.name];
@@ -79,7 +79,7 @@ const s = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: padding[16],
+    paddingTop: padding[12],
     paddingHorizontal: padding[24],
     backgroundColor: primitive.white[0],
   },

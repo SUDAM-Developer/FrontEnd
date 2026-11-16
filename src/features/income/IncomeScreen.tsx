@@ -6,7 +6,7 @@ import { s } from './styles';
 import { paymentStatus, won } from './types';
 import type { IncomeInvoice, IncomeState } from './types';
 import gradient from '../../../assets/images/income-gradient.svg';
-import card from '../../../assets/images/income-card.svg';
+import { IncomeGraphic } from '@/components/IncomeGraphic';
 
 function InvoiceCard({ invoice }: { invoice: IncomeInvoice }) {
   const status = paymentStatus(invoice);
@@ -79,7 +79,7 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
                   <Text style={s.summaryLabel}>이번달 교육비</Text>
                   <Text style={s.amount}>{won(state.data.summary.expectedAmount)}</Text>
                 </View>
-                <Image source={card} style={s.illustration} contentFit="contain" />
+                <IncomeGraphic size={88} style={s.illustration} />
                 <View style={s.totals}>
                   <Text style={s.totalText}>입금 {won(state.data.summary.receivedAmount)}</Text>
                   <View style={s.separator} />

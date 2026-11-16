@@ -1,5 +1,13 @@
 import { useRef, useState } from 'react';
-import { Keyboard, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  Keyboard,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { useSubmission } from '@/features/session-record/useSubmission';
@@ -36,6 +44,8 @@ export function MakeupSheet({
   const nextId = useRef(4);
   const submit = useSubmission();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const limitedHeight = step !== 'action' || picker !== null || notice !== null;
   const error = candidateError(candidates);
   const mayShare = !error && lesson.parentConsented;
   function update(id: string, patch: Partial<MakeupCandidate>) {
@@ -103,7 +113,11 @@ export function MakeupSheet({
           accessibilityLabel="휴강 보강 조율"
           accessibilityViewIsModal
           aria-busy={submit.pending}
-          style={[s.sheet, { paddingBottom: Math.max(insets.bottom + 24, 52) }]}
+          style={[
+            s.sheet,
+            limitedHeight && { maxHeight: Math.min(466, windowHeight * 0.92) },
+            { paddingBottom: Math.max(insets.bottom + 24, 52) },
+          ]}
         >
           <View style={s.handle} />
           {notice ? (
@@ -117,7 +131,7 @@ export function MakeupSheet({
               <ActionButton label="확인" onPress={() => setNotice(null)} />
             </>
           ) : picker ? (
-            <>
+            <View style={s.pickerBody}>
               {picker.kind === 'date' && target ? (
                 <CalendarPicker
                   value={target.date}
@@ -139,10 +153,26 @@ export function MakeupSheet({
                   onCancel={() => setPicker(null)}
                 />
               )}
-            </>
+            </View>
           ) : (
             <>
-              <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+              {step === 'candidates' && (
+                <View style={s.fixedHeading}>
+                  <Text role="heading" style={s.heading}>
+                    보강 후보 날짜 고르기
+                  </Text>
+                  <Text style={s.description}>
+                    {lesson.dateLabel} {lesson.studentName} 수업을 휴강해요. 가능한 날짜를 1~3개
+                    고르면 학부모님이 그중 하나를 고르고, 안 맞으면 다른 날짜를 요청해요.
+                  </Text>
+                </View>
+              )}
+              <ScrollView
+                style={s.formScroll}
+                accessibilityLabel={step === 'candidates' ? '보강 후보 입력 영역' : undefined}
+                contentContainerStyle={s.content}
+                keyboardShouldPersistTaps="handled"
+              >
                 {step === 'action' ? (
                   <>
                     <Text role="heading" style={s.heading}>
@@ -155,13 +185,6 @@ export function MakeupSheet({
                   </>
                 ) : step === 'candidates' ? (
                   <>
-                    <Text role="heading" style={s.heading}>
-                      보강 후보 날짜 고르기
-                    </Text>
-                    <Text style={s.description}>
-                      {lesson.dateLabel} {lesson.studentName} 수업을 휴강해요. 가능한 날짜를 1~3개
-                      고르면 학부모님이 그중 하나를 고르고, 안 맞으면 다른 날짜를 요청해요.
-                    </Text>
                     {candidates.map((candidate, index) => (
                       <View key={candidate.id} style={s.candidate}>
                         <View style={s.candidateHeading}>

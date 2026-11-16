@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AppState, Platform, StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PushBanner } from '@/components/PushBanner';
 export type BannerNotification = {
@@ -57,10 +57,7 @@ export function PushBannerProvider({ children }: { children: ReactNode }) {
     <Context.Provider value={{ show, dismiss }}>
       {children}
       {active && appState === 'active' && (
-        <View
-          pointerEvents="box-none"
-          style={[s.layer, { top: insets.top + (Platform.OS === 'web' ? 44 : 0) + 12 }]}
-        >
+        <View pointerEvents="box-none" style={[s.layer, { top: insets.top + 12 }]}>
           <View pointerEvents="box-none" style={s.width}>
             <PushBanner
               title={active.title}

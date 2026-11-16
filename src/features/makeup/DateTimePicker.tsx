@@ -51,37 +51,43 @@ export function CalendarPicker({
           <Text style={s.monthArrow}>›</Text>
         </Pressable>
       </View>
-      <View style={s.week}>
-        {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-          <View key={day} style={s.day}>
-            <Text style={s.weekText}>{day}</Text>
+      <ScrollView
+        style={s.calendarDays}
+        keyboardShouldPersistTaps="handled"
+        accessibilityLabel="보강 날짜 달력"
+      >
+        <View style={s.week}>
+          {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
+            <View key={day} style={s.day}>
+              <Text style={s.weekText}>{day}</Text>
+            </View>
+          ))}
+        </View>
+        {Array.from({ length: Math.ceil((start + count) / 7) }, (_, row) => (
+          <View key={row} style={s.week}>
+            {Array.from({ length: 7 }, (_, col) => {
+              const day = row * 7 + col - start + 1;
+              const date = `${month.year}-${String(month.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              return day < 1 || day > count ? (
+                <View key={col} style={s.day} />
+              ) : (
+                <Pressable
+                  key={col}
+                  role="button"
+                  accessibilityLabel={`${month.year}년 ${month.month}월 ${day}일`}
+                  accessibilityState={{ selected: normalizeDate(value) === date }}
+                  onPress={() => onChange(date)}
+                  style={[s.day, normalizeDate(value) === date && s.selectedDay]}
+                >
+                  <Text style={[s.dayText, normalizeDate(value) === date && s.selectedDayText]}>
+                    {day}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         ))}
-      </View>
-      {Array.from({ length: Math.ceil((start + count) / 7) }, (_, row) => (
-        <View key={row} style={s.week}>
-          {Array.from({ length: 7 }, (_, col) => {
-            const day = row * 7 + col - start + 1;
-            const date = `${month.year}-${String(month.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            return day < 1 || day > count ? (
-              <View key={col} style={s.day} />
-            ) : (
-              <Pressable
-                key={col}
-                role="button"
-                accessibilityLabel={`${month.year}년 ${month.month}월 ${day}일`}
-                accessibilityState={{ selected: normalizeDate(value) === date }}
-                onPress={() => onChange(date)}
-                style={[s.day, normalizeDate(value) === date && s.selectedDay]}
-              >
-                <Text style={[s.dayText, normalizeDate(value) === date && s.selectedDayText]}>
-                  {day}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      ))}
+      </ScrollView>
       <View style={s.actions}>
         <ActionButton label="날짜 선택 취소" variant="secondary" onPress={onCancel} />
       </View>
