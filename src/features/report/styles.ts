@@ -60,3 +60,9 @@ export const s = StyleSheet.create({
   },
   readText: { ...t.caption[1].medium, color: c.text.feedback.success },
 });
+
+export const skeleton = StyleSheet.create({
+  card: { backgroundColor: c.surface.disabled, borderRadius: radius.medium },
+  short: { height: 56 },
+  tall: { height: 138 },
+});
