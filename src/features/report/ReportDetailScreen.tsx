@@ -8,9 +8,10 @@ import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { TextInput } from '@/components/TextInput';
+import { FeeEditSheet } from './FeeEditSheet';
 import { detail as s } from './styles';
 import { formatPeriod, formatWon } from './types';
-import type { ReportDetail } from './types';
+import type { FeeEdit, ReportDetail } from './types';
 
 export type ReportDetailScreenProps = {
   report: ReportDetail;
@@ -19,8 +20,8 @@ export type ReportDetailScreenProps = {
   onSend: (comment: string) => void;
   /** 초안 다시 만들기. 새 초안을 돌려주면 입력칸을 바꿉니다. */
   onRegenerate?: () => Promise<string> | string;
-  /** 교육비 안내 "수정" */
-  onEditFee?: () => void;
+  /** 교육비 수정 저장. 없으면 "수정"을 누를 수 없습니다. */
+  onSaveFee?: (edit: FeeEdit, signal: AbortSignal) => Promise<void>;
 };
 
 /** T-14 정산 리포트 상세 (정상) */
@@ -29,13 +30,16 @@ export function ReportDetailScreen({
   onBack,
   onSend,
   onRegenerate,
-  onEditFee,
+  onSaveFee,
 }: ReportDetailScreenProps) {
   const [comment, setComment] = useState(report.comment.draft);
   const [checked, setChecked] = useState(false);
   const [softenedOpen, setSoftenedOpen] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const { stats, fee } = report;
+  const [feeTotal, setFeeTotal] = useState(report.fee.total);
+  const [feeSheetOpen, setFeeSheetOpen] = useState(false);
+  const { stats } = report;
+  const fee = { ...report.fee, total: feeTotal };
   const canSend = checked && !regenerating && comment.trim().length > 0;
 
   const regenerate = async () => {
@@ -189,7 +193,7 @@ export function ReportDetailScreen({
               <View style={s.feeLabel}>
                 <Text style={s.sectionLabel}>교육비 안내</Text>
               </View>
-              <LinkButton label="수정" onPress={onEditFee} />
+              <LinkButton label="수정" onPress={onSaveFee && (() => setFeeSheetOpen(true))} />
             </View>
             <View style={s.card}>
               <View style={s.rows}>
@@ -235,6 +239,17 @@ export function ReportDetailScreen({
           />
         </View>
       </View>
+      {feeSheetOpen && onSaveFee && (
+        <FeeEditSheet
+          currentTotal={feeTotal}
+          onClose={() => setFeeSheetOpen(false)}
+          onSave={onSaveFee}
+          onSaved={(edit) => {
+            setFeeTotal(edit.total);
+            setFeeSheetOpen(false);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

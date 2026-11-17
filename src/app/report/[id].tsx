@@ -10,6 +10,11 @@ const previewRegenerate = () =>
     setTimeout(() => resolve(previewReportDetail.comment.draft), REGENERATE_PREVIEW_MS),
   );
 
+// TODO: 교육비 수정 API가 생기면 실제 요청으로 바꿉니다. 지금은 저장 중 상태만 잠깐 보여 줍니다.
+const SAVE_FEE_PREVIEW_MS = 1500;
+const previewSaveFee = () =>
+  new Promise<void>((resolve) => setTimeout(resolve, SAVE_FEE_PREVIEW_MS));
+
 const back = () => {
   if (router.canGoBack()) router.back();
   else router.replace('/reports');
@@ -26,6 +31,7 @@ export default function ReportDetailRoute() {
       // TODO: 카카오톡 공유 연동 전까지는 목록으로 돌아갑니다.
       onSend={back}
       onRegenerate={previewRegenerate}
+      onSaveFee={previewSaveFee}
     />
   );
 }
