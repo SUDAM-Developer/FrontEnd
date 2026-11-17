@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { semantic as c } from '@/styles/colors';
 import { typography as t } from '@/styles/typography';
-import { gap, grid, padding, radius } from '@/styles/measurement';
+import { gap, grid, lineWeight, padding, radius } from '@/styles/measurement';
 
 export const s = StyleSheet.create({
   safe: { flex: 1, alignItems: 'center', backgroundColor: c.surface.input },
@@ -73,4 +73,149 @@ export const empty = StyleSheet.create({
   texts: { alignItems: 'center', gap: gap[4] },
   title: { ...t.body[1].bold, color: c.text.default.strong, textAlign: 'center' },
   description: { ...t.body[4].medium, color: c.text.default.weak, textAlign: 'center' },
+});
+
+/** 정산 리포트 상세 (Figma: T-14 정산 리포트/정상) */
+export const detail = StyleSheet.create({
+  safe: { flex: 1, alignItems: 'center', backgroundColor: c.surface.input },
+  // 웹에서는 상태바 높이만큼 위를 띄웁니다. (TutoringFormLayout과 같음)
+  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  navBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: padding[24],
+    paddingVertical: padding[12],
+  },
+  icon: { width: 24, height: 24 },
+  iconFlipped: { transform: [{ rotate: '180deg' }] },
+  navTitle: { ...t.body[1].bold, color: c.text.default.strong, textAlign: 'center' },
+  content: {
+    paddingHorizontal: padding[24],
+    paddingVertical: padding[12],
+    gap: gap[20],
+  },
+  summary: { paddingVertical: padding[8], gap: gap[4] },
+  title: { ...t.heading[1].bold, color: c.text.default.normal },
+  meta: { flexDirection: 'row', gap: gap[8] },
+  metaText: { ...t.body[3].semiBold, color: c.text.default.neutral },
+  stats: { flexDirection: 'row', gap: 9, paddingVertical: padding[12] },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: gap[4],
+    // Figma는 좌우 16이지만 "이해도 · 평균"이 상자보다 넓어 넘쳐 보입니다. 가운데 정렬이라 4로 줄여 한 줄을 유지합니다.
+    paddingHorizontal: padding[4],
+    paddingVertical: padding[12],
+    backgroundColor: c.surface.brand,
+    borderRadius: radius.medium,
+  },
+  statLabel: { ...t.body[5].semiBold, color: c.text.default.neutral, textAlign: 'center' },
+  statValue: { ...t.body[1].bold, color: c.text.brand.assistive, textAlign: 'center' },
+  section: { gap: gap[8] },
+  progressLabel: { paddingHorizontal: padding[8] },
+  sectionLabel: { ...t.body[4].semiBold, color: c.text.default.neutral },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: padding[8],
+  },
+  commentLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: gap[12],
+    paddingHorizontal: padding[8],
+  },
+  feeLabel: { paddingHorizontal: padding[8] },
+  aiTag: {
+    paddingHorizontal: padding[8],
+    paddingVertical: padding[4],
+    borderRadius: radius.large,
+    backgroundColor: c.surface.brand,
+  },
+  aiTagText: { ...t.caption[1].medium, color: c.text.brand.assistive },
+  linkButton: { height: 24, justifyContent: 'center', paddingHorizontal: padding[12] },
+  linkText: { ...t.body[4].semiBold, color: c.action.default, textAlign: 'center' },
+  pressed: { opacity: 0.7 },
+  card: {
+    paddingHorizontal: padding[16],
+    paddingVertical: padding[20],
+    backgroundColor: c.surface.subtle,
+    borderRadius: radius.medium,
+    gap: gap[12],
+  },
+  divider: {
+    height: lineWeight.subtle,
+    backgroundColor: c.border.default,
+    borderRadius: radius.small,
+  },
+  rows: { gap: gap[12] },
+  tableHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tableHeaderText: { ...t.body[4].semiBold, color: c.text.default.neutral },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: gap[8],
+  },
+  lessonCols: { width: 97, flexDirection: 'row', justifyContent: 'space-between' },
+  textbook: { ...t.body[3].semiBold, color: c.text.default.strong, flexShrink: 1 },
+  startLesson: { ...t.body[3].medium, color: c.text.default.strong },
+  currentLesson: { ...t.body[3].bold, color: c.text.brand.assistive },
+  checkRow: { flexDirection: 'row', alignItems: 'center', gap: gap[8], alignSelf: 'flex-start' },
+  checkSlot: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  checkBox: {
+    width: 16,
+    height: 16,
+    borderRadius: radius.small,
+    borderWidth: lineWeight.regular,
+    borderColor: c.icon.disabled,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkBoxOn: { backgroundColor: c.icon.brand, borderColor: c.icon.brand },
+  // TermsCheckbox와 같은 체크 표시입니다.
+  checkMark: {
+    width: 8,
+    height: 5,
+    borderLeftWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: c.text.default.inverse,
+    transform: [{ rotate: '-45deg' }],
+    marginTop: -2,
+  },
+  checkLabel: { ...t.body[5].medium, color: c.text.default.normal },
+  accordion: { backgroundColor: c.surface.subtle, borderRadius: radius.medium },
+  accordionHeader: {
+    height: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: padding[12],
+  },
+  accordionTitle: { ...t.body[3].semiBold, color: c.text.brand.assistive },
+  accordionBody: {
+    ...t.body[5].medium,
+    color: c.text.default.normal,
+    paddingHorizontal: padding[12],
+    paddingBottom: padding[16],
+  },
+  totalBlock: { gap: gap[16] },
+  totalLabel: { ...t.body[2].bold, color: c.text.default.strong },
+  totalValue: { ...t.body[1].bold, color: c.text.brand.assistive },
+  feeRowLabel: { ...t.body[4].semiBold, color: c.text.default.normal },
+  feeRowValue: {
+    ...t.body[4].medium,
+    color: c.text.default.neutral,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  cta: {
+    gap: gap[12],
+    paddingHorizontal: padding[24],
+    paddingVertical: padding[20],
+    backgroundColor: c.surface.input,
+  },
+  helpText: { ...t.caption[1].medium, color: c.text.default.weak, textAlign: 'center' },
 });
