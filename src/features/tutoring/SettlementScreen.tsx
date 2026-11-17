@@ -8,6 +8,7 @@ import { semantic } from '@/styles/colors';
 import { gap, lineWeight, padding, radius } from '@/styles/measurement';
 import { typography } from '@/styles/typography';
 import { TextInput } from '@/components/TextInput';
+import { formatWonInput, nextWonDigits, onlyDigits } from '@/utils/won';
 import { BankSheet, OTHER_BANK } from './BankSheet';
 import type { Bank } from './BankSheet';
 import { FieldLabel, TOO_LONG_MESSAGE, TextField, isTooLong } from './FormFields';
@@ -20,8 +21,6 @@ const TIMINGS = ['선불', '후불'] as const;
 type Cycle = (typeof CYCLES)[number];
 type Timing = (typeof TIMINGS)[number];
 
-const FEE_SUFFIX = '원';
-
 // 입력값 규칙
 const CUSTOM_CYCLE_MIN = 1;
 const CUSTOM_CYCLE_MAX = 20;
@@ -32,13 +31,7 @@ const ACCOUNT_DIGITS_MIN = 10;
 const ACCOUNT_DIGITS_MAX = 14;
 const HOLDER_MAX = 20;
 
-const onlyDigits = (text: string) => text.replace(/[^0-9]/g, '');
-
 const inRange = (value: number, min: number, max: number) => value >= min && value <= max;
-
-/** "360000" → "360,000원" */
-const formatFee = (digits: string) =>
-  digits ? `${Number(digits).toLocaleString('ko-KR')}${FEE_SUFFIX}` : '';
 
 export type SettlementScreenProps = {
   /** 'lastTutoring'이면 입금 계좌 위에 "지난 과외 계좌를 불러왔어요." 안내를 보여 줍니다. */
@@ -62,15 +55,7 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
   const touch = (field: keyof typeof touched) =>
     setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }));
 
-  const changeFee = (text: string) => {
-    const digits = onlyDigits(text);
-    // "원"만 지운 경우에는 숫자가 그대로라 다시 "원"이 붙으므로, 마지막 숫자를 지웁니다.
-    if (fee && !text.endsWith(FEE_SUFFIX) && digits === fee) {
-      setFee(fee.slice(0, -1));
-      return;
-    }
-    setFee(digits.replace(/^0+/, ''));
-  };
+  const changeFee = (text: string) => setFee(nextWonDigits(fee, text));
 
   const cycleValid =
     cycle !== null &&
@@ -165,7 +150,7 @@ export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
 
         <TextField
           label="수업료 (정산 1회당)"
-          value={formatFee(fee)}
+          value={formatWonInput(fee)}
           onChangeText={changeFee}
           onBlur={() => touch('fee')}
           keyboardType="number-pad"
