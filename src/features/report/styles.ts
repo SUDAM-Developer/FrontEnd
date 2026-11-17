@@ -224,3 +224,34 @@ export const detail = StyleSheet.create({
   },
   toastText: { ...t.caption[1].medium, color: c.text.brand.assistive, textAlign: 'center' },
 });
+
+/** 교육비 수정 시트 (Figma: T-14 교육비 수정 시트) */
+export const feeSheet = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(45, 48, 61, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  dismiss: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 },
+  sheet: {
+    width: '100%',
+    maxWidth: 390,
+    maxHeight: '92%',
+    backgroundColor: c.surface.subtle,
+    borderTopLeftRadius: radius.large,
+    borderTopRightRadius: radius.large,
+  },
+  scroll: { gap: gap[12] },
+  handleArea: { alignItems: 'center', paddingVertical: padding[12] },
+  handle: { width: 56, height: 4, borderRadius: radius.full, backgroundColor: c.border.default },
+  body: { paddingHorizontal: padding[24], gap: gap[12] },
+  texts: { gap: gap[8] },
+  title: { ...t.heading[1].bold, color: c.text.default.normal },
+  description: { ...t.body[4].semiBold, color: c.text.default.weak },
+  error: { ...t.caption[1].regular, color: c.text.feedback.warning },
+  cta: { gap: gap[12], paddingHorizontal: padding[24], paddingVertical: padding[20] },
+  toastSlot: detail.toastSlot,
+  toast: detail.toast,
+  toastText: detail.toastText,
+});

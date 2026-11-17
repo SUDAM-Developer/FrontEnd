@@ -90,5 +90,8 @@ export type ReportDetail = {
   };
 };
 
+/** 교육비 수정 내용. 수정 전·후 금액과 사유를 함께 저장합니다. */
+export type FeeEdit = { previousTotal: number; total: number; reason: string };
+
 /** 300000 → "300,000원" */
 export const formatWon = (value: number) => `${value.toLocaleString('ko-KR')}원`;
