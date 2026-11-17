@@ -2,6 +2,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { ReportCard } from './ReportCard';
+import { ReportEmpty } from './ReportEmpty';
 import { ReportSkeleton } from './ReportSkeleton';
 import { s } from './styles';
 import type { ReportState } from './types';
@@ -18,6 +19,8 @@ export function ReportScreen({ state, onRetry }: { state: ReportState; onRetry?:
         <ScrollView style={s.scroll} contentContainerStyle={s.content}>
           {state.status === 'loading' ? (
             <ReportSkeleton />
+          ) : state.status === 'ready' && state.data.reports.length === 0 ? (
+            <ReportEmpty firstSettlementSession={state.data.firstSettlementSession} />
           ) : state.status === 'ready' ? (
             <View style={s.list}>
               {state.data.reports.map((report) => (

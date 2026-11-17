@@ -66,3 +66,11 @@ export const skeleton = StyleSheet.create({
   short: { height: 56 },
   tall: { height: 138 },
 });
+
+export const empty = StyleSheet.create({
+  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: gap[2] },
+  graphic: { width: 100, height: 100 },
+  texts: { alignItems: 'center', gap: gap[4] },
+  title: { ...t.body[1].bold, color: c.text.default.strong, textAlign: 'center' },
+  description: { ...t.body[4].medium, color: c.text.default.weak, textAlign: 'center' },
+});
