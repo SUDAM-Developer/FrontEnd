@@ -1,5 +1,5 @@
 import { Platform, StyleSheet } from 'react-native';
-import { semantic as c } from '@/styles/colors';
+import { primitive, semantic as c } from '@/styles/colors';
 import { typography as t } from '@/styles/typography';
 import { gap, grid, lineWeight, padding, radius } from '@/styles/measurement';
 
@@ -174,17 +174,7 @@ export const detail = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkBoxOn: { backgroundColor: c.icon.brand, borderColor: c.icon.brand },
-  // TermsCheckbox와 같은 체크 표시입니다.
-  checkMark: {
-    width: 8,
-    height: 5,
-    borderLeftWidth: 1.5,
-    borderBottomWidth: 1.5,
-    borderColor: c.text.default.inverse,
-    transform: [{ rotate: '-45deg' }],
-    marginTop: -2,
-  },
+  checkBoxImage: { width: 16, height: 16 },
   checkLabel: { ...t.body[5].medium, color: c.text.default.normal },
   accordion: { backgroundColor: c.surface.subtle, borderRadius: radius.medium },
   accordionHeader: {
@@ -218,4 +208,19 @@ export const detail = StyleSheet.create({
     backgroundColor: c.surface.input,
   },
   helpText: { ...t.caption[1].medium, color: c.text.default.weak, textAlign: 'center' },
+  // 초안 생성 중 코멘트 입력칸 자리 (Figma: textFiled/default/Large 스켈레톤)
+  commentSkeleton: {
+    height: 160,
+    backgroundColor: c.surface.disabled,
+    borderRadius: radius.large,
+  },
+  toastSlot: { height: 32, alignItems: 'center', justifyContent: 'center' },
+  toast: {
+    padding: padding[8],
+    backgroundColor: c.surface.default,
+    borderRadius: radius.full,
+    // Figma drop-shadow 1px 1px 6.8px blue/100
+    boxShadow: `1px 1px 6.8px ${primitive.blue[100]}`,
+  },
+  toastText: { ...t.caption[1].medium, color: c.text.brand.assistive, textAlign: 'center' },
 });

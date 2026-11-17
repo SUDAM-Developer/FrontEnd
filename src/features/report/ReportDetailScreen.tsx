@@ -1,5 +1,6 @@
 import arrowBackImage from '../../../assets/images/arrow_back.svg';
 import arrowDownImage from '../../../assets/images/arrow_down_24.svg';
+import checkboxCheckedImage from '../../../assets/images/checkbox-checked.svg';
 import { Fragment, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -33,13 +34,20 @@ export function ReportDetailScreen({
   const [comment, setComment] = useState(report.comment.draft);
   const [checked, setChecked] = useState(false);
   const [softenedOpen, setSoftenedOpen] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const { stats, fee } = report;
+  const canSend = checked && !regenerating && comment.trim().length > 0;
 
   const regenerate = async () => {
-    if (!onRegenerate) return;
-    setComment(await onRegenerate());
-    // 새 초안은 다시 확인해야 보낼 수 있습니다.
-    setChecked(false);
+    if (!onRegenerate || regenerating) return;
+    setRegenerating(true);
+    try {
+      setComment(await onRegenerate());
+      // 새 초안은 다시 확인해야 보낼 수 있습니다.
+      setChecked(false);
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   return (
@@ -115,16 +123,28 @@ export function ReportDetailScreen({
                     <Text style={s.aiTagText}>AI 초안</Text>
                   </View>
                 </View>
-                <LinkButton label="초안 다시 만들기" onPress={onRegenerate && regenerate} />
+                <LinkButton
+                  label="초안 다시 만들기"
+                  onPress={onRegenerate && !regenerating ? regenerate : undefined}
+                />
               </View>
-              <TextInput
-                accessibilityLabel="선생님 코멘트"
-                value={comment}
-                onChangeText={setComment}
-                multiline
-                scrollEnabled={false}
-                textAlignVertical="top"
-              />
+              {regenerating ? (
+                <View
+                  role="progressbar"
+                  accessibilityLabel="코멘트 초안 만드는 중"
+                  aria-busy
+                  style={s.commentSkeleton}
+                />
+              ) : (
+                <TextInput
+                  accessibilityLabel="선생님 코멘트"
+                  value={comment}
+                  onChangeText={setComment}
+                  multiline
+                  scrollEnabled={false}
+                  textAlignVertical="top"
+                />
+              )}
             </View>
             <Pressable
               role="checkbox"
@@ -136,9 +156,11 @@ export function ReportDetailScreen({
               style={s.checkRow}
             >
               <View aria-hidden style={s.checkSlot}>
-                <View style={[s.checkBox, checked && s.checkBoxOn]}>
-                  {checked && <View style={s.checkMark} />}
-                </View>
+                {checked ? (
+                  <Image source={checkboxCheckedImage} style={s.checkBoxImage} />
+                ) : (
+                  <View style={s.checkBox} />
+                )}
               </View>
               <Text style={s.checkLabel}>코멘트를 확인했어요</Text>
             </Pressable>
@@ -195,12 +217,21 @@ export function ReportDetailScreen({
         </ScrollView>
 
         <View style={s.cta}>
-          <Text style={s.helpText}>AI 코멘트를 한 번 확인해야 보낼 수 있어요.</Text>
+          {regenerating ? null : checked ? (
+            <View style={s.toastSlot}>
+              <View role="status" accessibilityLiveRegion="polite" style={s.toast}>
+                <Text style={s.toastText}>코멘트를 확인했어요</Text>
+              </View>
+            </View>
+          ) : (
+            <Text style={s.helpText}>AI 코멘트를 한 번 확인해야 보낼 수 있어요.</Text>
+          )}
           <ActionButton
             label="카톡으로 보내기"
-            disabled={!checked || !comment.trim()}
-            disabledAppearance="brand"
-            onPress={() => onSend(comment.trim())}
+            // Figma는 확인 전·초안 생성 중에도 기본 파란 버튼이라, 모양은 유지하고 누를 때만 막습니다.
+            onPress={() => {
+              if (canSend) onSend(comment.trim());
+            }}
           />
         </View>
       </View>
