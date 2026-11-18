@@ -89,6 +89,7 @@ export type TutoringFormLayoutProps = {
   toast?: string;
   /** 하단 버튼 바로 위에 보여 줄 작은 안내 문구 */
   helpText?: string;
+  beforeAction?: ReactNode;
   children: ReactNode;
 };
 
@@ -104,6 +105,7 @@ export function TutoringFormLayout({
   loadingOverlay = true,
   toast,
   helpText,
+  beforeAction,
   children,
 }: TutoringFormLayoutProps) {
   const back = () => {
@@ -147,6 +149,7 @@ export function TutoringFormLayout({
             </View>
           ) : null}
           {helpText ? <Text style={s.helpText}>{helpText}</Text> : null}
+          {beforeAction}
           <ActionButton
             label={ctaLabel}
             disabled={!canProceed}

@@ -1,3 +1,5 @@
+import { useTutoringDraft } from './TutoringDraftProvider';
+import { SETTLEMENT_MIN, SETTLEMENT_MAX } from './operation';
 import arrowDownImage from '../../../assets/images/arrow_down.svg';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -23,8 +25,8 @@ type Timing = (typeof TIMINGS)[number];
 const FEE_SUFFIX = '원';
 
 // 입력값 규칙
-const CUSTOM_CYCLE_MIN = 1;
-const CUSTOM_CYCLE_MAX = 20;
+const CUSTOM_CYCLE_MIN = SETTLEMENT_MIN;
+const CUSTOM_CYCLE_MAX = SETTLEMENT_MAX;
 const FEE_MIN = 10_000;
 const FEE_MAX = 10_000_000;
 const BANK_NAME_MAX = 20;
@@ -47,9 +49,20 @@ export type SettlementScreenProps = {
 
 /** T-07 과외 만들기 · 정산 조건 · 입금 계좌 (4/5 단계) */
 export function SettlementScreen({ prefillSource }: SettlementScreenProps) {
-  const [cycle, setCycle] = useState<Cycle | null>(null);
-  const [customCycle, setCustomCycle] = useState('');
-  const [timing, setTiming] = useState<Timing | null>(null);
+  const { operation } = useTutoringDraft();
+  const [cycle, setCycle] = useState<Cycle | null>(() =>
+    operation
+      ? [4, 8, 12].includes(operation.settlementSessionCount)
+        ? (`${operation.settlementSessionCount}회차` as Cycle)
+        : '직접'
+      : null,
+  );
+  const [customCycle, setCustomCycle] = useState(
+    operation ? String(operation.settlementSessionCount) : '',
+  );
+  const [timing, setTiming] = useState<Timing | null>(
+    operation ? (operation.paymentTiming === 'PREPAID' ? '선불' : '후불') : null,
+  );
   const [fee, setFee] = useState('');
   const [bank, setBank] = useState<Bank | null>(null);
   const [otherBankName, setOtherBankName] = useState('');

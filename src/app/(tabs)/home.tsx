@@ -57,7 +57,8 @@ export default function Screen() {
         loading={loading}
         firstTutoring={CAN_PREVIEW && preview === 'first'}
         onPreparationStep={(step) => {
-          if (step === 'student' || step === 'tutoring') router.push('/tutoring/student');
+          if (step === 'student') router.push('/tutoring/student');
+          else if (step === 'tutoring') router.push('/tutoring/operation');
           else
             setNotice(
               step === 'introduction'
