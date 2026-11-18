@@ -58,6 +58,12 @@ export type ReportDetail = {
   id: string;
   studentName: string;
   teacherName: string;
+  /** sent면 발송 완료 리포트로, 읽기 전용으로 보여 줍니다. */
+  status: ReportStatus;
+  /** 학부모에게 보낸 일시 (ISO datetime). 발송 완료일 때만 있습니다. */
+  sentAt?: string;
+  /** 학부모가 열람한 일시 (ISO datetime). 열람 전이면 없습니다. */
+  parentReadAt?: string;
   /** 이번 정산에서 마친 수업 회차 수 (제목 "N회차 수업을 마쳤어요") */
   sessionCount: number;
   periodStart: string;
@@ -74,7 +80,9 @@ export type ReportDetail = {
   comment: {
     /** AI가 만든 선생님 코멘트 초안 */
     draft: string;
-    /** AI가 부드럽게 다듬은 문장 */
+    /** 선생님이 적은 원래 기록 메모. 학부모에게는 보이지 않습니다. */
+    teacherMemo: string;
+    /** 기록 메모를 AI가 부드럽게 다듬은 초안 문장 */
     softened: string;
   };
   fee: {
@@ -92,6 +100,15 @@ export type ReportDetail = {
 
 /** 교육비 수정 내용. 수정 전·후 금액과 사유를 함께 저장합니다. */
 export type FeeEdit = { previousTotal: number; total: number; reason: string };
+
+/** 2026-10-01T09:00 → "10월 1일 오전 9:00" */
+export function formatDateTime(value: string) {
+  const { month, day } = parseDate(value);
+  const [hour, minute] = value.slice(11, 16).split(':').map(Number);
+  const period = hour < 12 ? '오전' : '오후';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${month}월 ${day}일 ${period} ${hour12}:${String(minute).padStart(2, '0')}`;
+}
 
 /** 300000 → "300,000원" */
 export const formatWon = (value: number) => `${value.toLocaleString('ko-KR')}원`;

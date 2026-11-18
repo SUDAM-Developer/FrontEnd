@@ -45,6 +45,7 @@ export const previewReportDetail: ReportDetail = {
   id: 'report-1',
   studentName: '박지후',
   teacherName: '김수담',
+  status: 'created',
   sessionCount: 8,
   periodStart: '2026-09-15',
   periodEnd: '2026-10-13',
@@ -63,12 +64,12 @@ export const previewReportDetail: ReportDetail = {
     draft:
       '9월에는 장문 독해에서 큰 변화가 있었습니다. 수능특강을 진행하며 한 지문을 읽는 시간이 처음보다 눈에 띄게 줄었고, 주제를 먼저 찾고 세부 내용을 확인하는 순서가 자리를 잡았습니다.\n' +
       "문법은 관계사 단원에서 실수가 잦았지만, 마지막 두 회차에는 이해도 '상'으로 올라왔습니다. 숙제 수행률은 88%로, 첫 2주보다 마지막 2주에 더 꾸준해졌습니다. 10월에는 관계사 복습과 함께 빈칸 추론 유형을 집중적으로 다룰 예정입니다.",
+    teacherMemo: '관계사 실수 많음. 숙제를 대충 해 옴.',
     softened:
-      '9월 한 달 동안 지후가 장문 독해에서 정말 많이 성장했어요. 지문 하나를 읽는 시간이 눈에 띄게 줄었고, 주제를 먼저 찾고 세부 내용을 확인하는 습관도 잘 자리 잡았습니다.\n' +
-      "관계사 단원에서는 실수가 조금 있었지만, 마지막 두 회차에는 이해도 '상'까지 올라왔어요. 숙제도 88% 수행하며 갈수록 더 꾸준해지고 있습니다. 10월에는 관계사 복습과 빈칸 추론 유형을 함께 다져 볼게요.",
+      "문법은 관계사 단원에서 실수가 잦았지만, 마지막 두 회차에는 이해도 '상'으로 올라왔습니다. 숙제도 처음보다 꾸준해졌습니다.",
   },
   fee: {
-    total: 300000,
+    total: 360000,
     setting: '8회차 · 선불 · 9월 14일 사이클',
     countedSessions: 8,
     unitPrice: 45000,
@@ -76,3 +77,19 @@ export const previewReportDetail: ReportDetail = {
     account: '국민 ****1492 한서윤',
   },
 };
+
+/** 목록의 리포트 id로 상세 미리보기를 만듭니다. 발송 완료 리포트는 읽기 전용 화면이 됩니다. */
+export function previewReportDetailFor(id?: string): ReportDetail {
+  const item = previewReports.reports.find((report) => report.id === id);
+  if (!item) return previewReportDetail;
+  return {
+    ...previewReportDetail,
+    id: item.id,
+    studentName: item.studentName,
+    periodStart: item.periodStart,
+    periodEnd: item.periodEnd,
+    status: item.status,
+    sentAt: item.status === 'sent' ? '2026-10-01T09:00' : undefined,
+    parentReadAt: item.parentReadAt,
+  };
+}

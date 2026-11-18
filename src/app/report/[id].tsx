@@ -1,7 +1,7 @@
 import { CAN_PREVIEW } from '@/config/review';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { ReportDetailScreen } from '@/features/report/ReportDetailScreen';
-import { previewReportDetail } from '@/features/report/previewData';
+import { previewReportDetail, previewReportDetailFor } from '@/features/report/previewData';
 
 // TODO: 초안 생성 API가 생기면 실제 요청으로 바꿉니다. 지금은 스켈레톤만 잠깐 보여 줍니다.
 const REGENERATE_PREVIEW_MS = 1500;
@@ -26,7 +26,7 @@ export default function ReportDetailRoute() {
   if (!CAN_PREVIEW) return <Redirect href="/reports" />;
   return (
     <ReportDetailScreen
-      report={{ ...previewReportDetail, id: id ?? previewReportDetail.id }}
+      report={previewReportDetailFor(id)}
       onBack={back}
       // TODO: 카카오톡 공유 연동 전까지는 목록으로 돌아갑니다.
       onSend={back}
