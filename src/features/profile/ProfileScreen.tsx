@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ActionButton } from '@/components/ActionButton';
-import { Chip } from '@/components/Chip';
+import { ChipSelectField } from '@/components/FormFields';
 import { Loading } from '@/components/Loading';
 import { TextInput } from '@/components/TextInput';
 import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
@@ -27,7 +27,14 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
   const router = useRouter();
   const { name, setName, selected, setSelected, setProfile, editing } = useOnboarding();
   const [draftName, setDraftName] = useState(initialProfile?.name ?? name);
-  const [draftSubjects, setDraftSubjects] = useState(initialProfile?.subjects ?? selected);
+  const initialSubjects = initialProfile?.subjects ?? selected;
+  const isPreset = (subject: string) => profileSubjects.some((preset) => preset === subject);
+  const [draftSubjects, setDraftSubjects] = useState(
+    Array.from(new Set(initialSubjects.map((subject) => (isPreset(subject) ? subject : '기타')))),
+  );
+  const [otherSubject, setOtherSubject] = useState(
+    initialSubjects.filter((subject) => !isPreset(subject)).join(', '),
+  );
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -36,7 +43,10 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
   const controller = useRef<AbortController | null>(null);
   const validName = isValidProfileName(draftName);
   const nameTooLong = draftName.trim().length > 10;
-  const canSubmit = validName && draftSubjects.length > 0;
+  const canSubmit =
+    validName &&
+    draftSubjects.length > 0 &&
+    (!draftSubjects.includes('기타') || otherSubject.trim().length > 0);
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -52,7 +62,12 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
     Keyboard.dismiss();
     const request = new AbortController();
     controller.current = request;
-    const value = { name: draftName.trim(), subjects: [...draftSubjects] };
+    const value = {
+      name: draftName.trim(),
+      subjects: draftSubjects.map((subject) =>
+        subject === '기타' ? otherSubject.trim() : subject,
+      ),
+    };
     try {
       if (onSave) {
         setSaving(true);
@@ -82,7 +97,11 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
     if (inFlight.current) return;
     Keyboard.dismiss();
     setName(draftName);
-    setSelected([...draftSubjects]);
+    setSelected(
+      draftSubjects.map((subject) =>
+        subject === '기타' && otherSubject.trim() ? otherSubject.trim() : subject,
+      ),
+    );
     if (router.canGoBack()) router.back();
     else router.replace(editing ? '/settings' : '/terms');
   }
@@ -146,26 +165,27 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
                   : undefined
             }
           />
-          <Text style={s.subjectLabel}>
-            과목<Text style={s.required}>*</Text> (복수 선택 가능)
-          </Text>
-          <View style={s.chips}>
-            {profileSubjects.map((subject) => (
-              <Chip
-                key={subject}
-                label={subject}
-                selected={draftSubjects.includes(subject)}
-                disabled={saving}
-                onPress={() => {
-                  setFailed(false);
-                  setDraftSubjects((current) =>
-                    current.includes(subject)
-                      ? current.filter((item) => item !== subject)
-                      : [...current, subject],
-                  );
-                }}
-              />
-            ))}
+          <View style={{ marginTop: 16 }}>
+            <ChipSelectField
+              label="과목"
+              hint="(복수 선택 가능)"
+              options={profileSubjects}
+              disabled={saving}
+              isSelected={(subject) => draftSubjects.includes(subject)}
+              onPress={(subject) => {
+                setFailed(false);
+                setDraftSubjects((current) =>
+                  current.includes(subject)
+                    ? current.filter((item) => item !== subject)
+                    : [...current, subject],
+                );
+              }}
+              other={{
+                visible: draftSubjects.includes('기타'),
+                value: otherSubject,
+                onChangeText: setOtherSubject,
+              }}
+            />
           </View>
         </ScrollView>
         <View style={s.footer}>
