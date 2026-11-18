@@ -56,6 +56,7 @@ async function send<T>(path: string, options: RequestOptions): Promise<T> {
     credentials: 'include',
   });
 
+  if (response.status === 204 && response.ok) return undefined as T;
   let json: ApiResponse<T> | null = null;
   try {
     json = (await response.json()) as ApiResponse<T>;
@@ -100,7 +101,9 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     return await send<T>(path, options);
   } catch (error) {
     if (options.auth === false || !(error instanceof ApiError) || error.status !== 401) throw error;
+    if (options.signal?.aborted) throw error;
     await reissueAccessToken();
+    if (options.signal?.aborted) throw error;
     return send<T>(path, options);
   }
 }

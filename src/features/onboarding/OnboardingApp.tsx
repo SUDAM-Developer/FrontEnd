@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useOnboarding } from './OnboardingProvider';
@@ -15,7 +15,16 @@ import {
 
 const ink = '#343845';
 
-export default function OnboardingApp() {
+export default function OnboardingApp({
+  onLogout,
+  onDelete,
+}: {
+  onLogout: () => Promise<void>;
+  onDelete: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const locked = useRef(false);
   const router = useRouter();
   const { setAgreed, setName, setSelected, profile, setProfile, setEditing } = useOnboarding();
 
@@ -27,16 +36,30 @@ export default function OnboardingApp() {
   const openTerms = (title: string) =>
     setDialog({
       title,
-      body: '약관 원문이 아직 제공되지 않았습니다. 현재 화면은 UI 확인용 데모이며 실제 가입이나 개인정보 수집은 이루어지지 않습니다. 정식 서비스에서는 확정된 약관을 연결해야 합니다.',
+      body: '약관 원문을 준비 중입니다. 확정된 문서가 제공되면 확인할 수 있습니다.',
     });
-  const reset = () => {
-    setName('');
-    setSelected([]);
-    setProfile({ name: '', subjects: [] });
-    setAgreed([false, false, false]);
-    router.dismissAll();
-    router.replace('/');
-    setDialog(null);
+  const reset = async () => {
+    if (locked.current) return;
+    locked.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      if (dialog?.action === 'delete') await onDelete();
+      else await onLogout();
+
+      setName('');
+      setSelected([]);
+      setProfile({ name: '', subjects: [] });
+      setAgreed([false, false, false]);
+      router.dismissAll();
+      router.replace('/');
+      setDialog(null);
+    } catch {
+      setError('처리하지 못했어요. 다시 시도해 주세요.');
+    } finally {
+      locked.current = false;
+      setBusy(false);
+    }
   };
   const back = () => {
     if (router.canGoBack()) router.back();
@@ -119,7 +142,7 @@ export default function OnboardingApp() {
                   onPress={() =>
                     setDialog({
                       title: '로그아웃',
-                      body: '데모 프로필을 지우고 시작 화면으로 돌아갈까요?',
+                      body: '로그아웃하고 시작 화면으로 돌아갈까요?',
                       action: 'logout',
                     })
                   }
@@ -132,7 +155,7 @@ export default function OnboardingApp() {
                   onPress={() =>
                     setDialog({
                       title: '회원 탈퇴',
-                      body: '실제 계정은 생성되지 않았습니다. 이 화면에서 입력한 데모 프로필을 삭제할까요?',
+                      body: '계정을 탈퇴할까요? 탈퇴하면 계정 정보가 삭제됩니다.',
                       action: 'delete',
                     })
                   }
@@ -148,7 +171,9 @@ export default function OnboardingApp() {
         visible={dialog !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setDialog(null)}
+        onRequestClose={() => {
+          if (!busy) setDialog(null);
+        }}
       >
         <View style={s.overlay}>
           <View accessibilityViewIsModal style={s.dialog}>
@@ -156,16 +181,27 @@ export default function OnboardingApp() {
               {dialog?.title}
             </Text>
             <Text style={s.dialogBody}>{dialog?.body}</Text>
+            {error && <Text role="alert">{error}</Text>}
             {dialog?.action ? (
               <View style={s.dialogActions}>
                 <Pressable
                   accessibilityRole="button"
+                  disabled={busy}
                   onPress={() => setDialog(null)}
                   style={s.cancel}
                 >
                   <Text style={s.settingText}>취소</Text>
                 </Pressable>
-                <View style={s.flex}>{primary('확인', false, reset)}</View>
+                <View style={s.flex}>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={busy}
+                    onPress={() => void reset()}
+                    style={[s.primary, busy && s.disabled]}
+                  >
+                    <Text style={s.primaryText}>{busy ? '처리 중' : '확인'}</Text>
+                  </Pressable>
+                </View>
               </View>
             ) : (
               <>{primary('닫기', false, () => setDialog(null))}</>

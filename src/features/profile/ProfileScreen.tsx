@@ -22,10 +22,18 @@ import { typography } from '@/styles/typography';
 import { isValidProfileName, profileSubjects } from './profile';
 import type { ProfileValue, SaveProfile } from './profile';
 
-type Props = { onSave?: SaveProfile; initialProfile?: ProfileValue };
-export default function ProfileScreen({ onSave, initialProfile }: Props) {
+type Props = { onSave?: SaveProfile; initialProfile?: ProfileValue; editingProfile?: boolean };
+export default function ProfileScreen({ onSave, initialProfile, editingProfile }: Props) {
   const router = useRouter();
-  const { name, setName, selected, setSelected, setProfile, editing } = useOnboarding();
+  const {
+    name,
+    setName,
+    selected,
+    setSelected,
+    setProfile,
+    editing: contextEditing,
+  } = useOnboarding();
+  const editing = editingProfile ?? contextEditing;
   const [draftName, setDraftName] = useState(initialProfile?.name ?? name);
   const initialSubjects = initialProfile?.subjects ?? selected;
   const isPreset = (subject: string) => profileSubjects.some((preset) => preset === subject);
@@ -46,7 +54,8 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
   const canSubmit =
     validName &&
     draftSubjects.length > 0 &&
-    (!draftSubjects.includes('기타') || otherSubject.trim().length > 0);
+    (!draftSubjects.includes('기타') ||
+      (otherSubject.trim().length > 0 && otherSubject.trim().length <= 20));
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -74,7 +83,7 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
         await onSave(value, request.signal);
       }
       if (!mounted.current || request.signal.aborted) return;
-      // API 미확정: 기본 동작은 메모리 상태 반영만 수행합니다.
+      // 서버 저장 성공 후 화면 상태를 갱신합니다.
       setName(value.name);
       setSelected(value.subjects);
       setProfile(value);

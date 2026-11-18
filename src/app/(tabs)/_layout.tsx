@@ -1,36 +1,36 @@
-import { Link, Redirect, Tabs } from 'expo-router';
+import { Link, Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { MainTabBar } from '@/features/main/MainTabBar';
-import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
+import { AuthGate } from '@/features/auth/AuthGate';
 
 export default function TabsLayout() {
-  const { profile } = useOnboarding();
-  if (!profile.name) return <Redirect href="/" />;
   return (
-    <View style={s.page}>
-      <View style={s.phone}>
-        <Tabs
-          tabBar={(props) => <MainTabBar {...props} />}
-          screenOptions={{ headerTitleAlign: 'center' }}
-        >
-          <Tabs.Screen
-            name="home"
-            options={{
-              title: '홈',
-              headerRight: () => (
-                <Link href="/settings" style={s.settings}>
-                  <Text style={s.settingsText}>설정</Text>
-                </Link>
-              ),
-            }}
-          />
-          <Tabs.Screen name="schedule" options={{ title: '일정' }} />
-          <Tabs.Screen name="students" options={{ title: '학생' }} />
-          <Tabs.Screen name="reports" options={{ title: '리포트' }} />
-          <Tabs.Screen name="income" options={{ title: '수입' }} />
-        </Tabs>
+    <AuthGate>
+      <View style={s.page}>
+        <View style={s.phone}>
+          <Tabs
+            tabBar={(props) => <MainTabBar {...props} />}
+            screenOptions={{ headerTitleAlign: 'center' }}
+          >
+            <Tabs.Screen
+              name="home"
+              options={{
+                title: '홈',
+                headerRight: () => (
+                  <Link href="/settings" style={s.settings}>
+                    <Text style={s.settingsText}>설정</Text>
+                  </Link>
+                ),
+              }}
+            />
+            <Tabs.Screen name="schedule" options={{ title: '일정' }} />
+            <Tabs.Screen name="students" options={{ title: '학생' }} />
+            <Tabs.Screen name="reports" options={{ title: '리포트' }} />
+            <Tabs.Screen name="income" options={{ title: '수입' }} />
+          </Tabs>
+        </View>
       </View>
-    </View>
+    </AuthGate>
   );
 }
 
