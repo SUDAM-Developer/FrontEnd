@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" preserveAspectRatio="none" fill="none">
+<rect width="390" height="844" fill="url(#login_gradient)"/>
+<defs>
+<linearGradient id="login_gradient" x1="195" y1="0" x2="195" y2="844" gradientUnits="userSpaceOnUse">
+<stop stop-color="#DDF0FF"/>
+<stop offset="0.3" stop-color="#EBF6FF"/>
+<stop offset="0.5" stop-color="#F4FAFF"/>
+<stop offset="0.72" stop-color="#FFFFFF"/>
+</linearGradient>
+</defs>
+</svg>
