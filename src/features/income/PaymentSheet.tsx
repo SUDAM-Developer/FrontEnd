@@ -53,7 +53,11 @@ export function PaymentSheet({ invoice, onClose, onPaidInFull, onResend }: Props
                 label="미입금액 입력"
                 required={false}
                 value={formatWonInput(amount)}
-                onChangeText={(text) => setAmount(nextWonDigits(amount, text))}
+                onChangeText={(text) => {
+                  const next = nextWonDigits(amount, text);
+                  // 청구 금액보다 큰 받은 금액은 입력되지 않게 막습니다.
+                  if (Number(next) <= invoice.billedAmount) setAmount(next);
+                }}
                 placeholder="받은 금액을 입력해주세요"
                 keyboardType="number-pad"
                 inputMode="numeric"
