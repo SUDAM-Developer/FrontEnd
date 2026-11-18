@@ -7,9 +7,18 @@ import { useApiResource } from '@/hooks/useApiResource';
 import { ApiState } from '@/components/ApiState';
 import { ActionButton } from '@/components/ActionButton';
 import { InstallSheet } from '@/features/home/InstallSheet';
+import { loadHomeTasks } from '@/features/home/apiData';
+import type { HomeTask } from '@/features/home/types';
+const PENDING_TASKS: HomeTask[] = [
+  { id: 'records', label: '미기록 수업', count: null },
+  { id: 'messages', label: '안 보낸 카톡', count: null },
+  { id: 'reports', label: '발송 대기 정산 리포트', count: null },
+  { id: 'income', label: '미입금', count: null },
+];
 export default function Screen() {
   const router = useRouter();
   const { state, retry } = useApiResource(getSettings);
+  const { state: tasks } = useApiResource(loadHomeTasks);
   const [installOpen, setInstallOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   if (state.status !== 'ready')
@@ -29,10 +38,10 @@ export default function Screen() {
       weekday: 'long',
       timeZone: 'Asia/Seoul',
     }).format(new Date()),
+    // 일정 조회 API가 아직 없어 오늘 수업은 0건으로 보고 수업 없음 시안을 표시합니다.
     lessons: [],
-    tasks: [],
-    scheduleAvailable: false,
-    tasksAvailable: false,
+    // 할 일 조회 중이거나 실패하면 각 항목을 0건이 아닌 `-`로 표시합니다.
+    tasks: tasks.status === 'ready' ? tasks.data : PENDING_TASKS,
   };
   return (
     <>
