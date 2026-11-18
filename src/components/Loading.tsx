@@ -38,15 +38,24 @@ export function Loading({ visible }: LoadingProps) {
   const rotate = rotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={() => {}}>
-      <View style={s.overlay}>
-        <View role="progressbar" aria-busy accessibilityLabel="로딩 중" style={s.box}>
-          <Animated.View style={{ transform: [{ rotate }] }}>
-            <Image source={loadingImage} style={s.spinner} loading="eager" />
-          </Animated.View>
+    <>
+      {/*
+        로딩은 카카오 로그인처럼 페이지를 옮기기 직전에 뜨는 경우가 많습니다.
+        그때 이미지를 처음 받으면 요청이 취소돼 깨진 이미지(?)로 보이므로, 화면에 들어올 때 미리 받아 둡니다.
+      */}
+      {!visible && (
+        <Image source={loadingImage} style={s.preload} loading="eager" accessible={false} />
+      )}
+      <Modal visible={visible} transparent animationType="none" onRequestClose={() => {}}>
+        <View style={s.overlay}>
+          <View role="progressbar" aria-busy accessibilityLabel="로딩 중" style={s.box}>
+            <Animated.View style={{ transform: [{ rotate }] }}>
+              <Image source={loadingImage} style={s.spinner} loading="eager" />
+            </Animated.View>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 
@@ -61,4 +70,5 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   spinner: { width: SPINNER_IMAGE_SIZE, height: SPINNER_IMAGE_SIZE },
+  preload: { position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' },
 });
