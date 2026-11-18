@@ -1,3 +1,4 @@
+import { TextbookProgressCard } from '@/components/TextbookProgressCard';
 import { useRef, useState } from 'react';
 import {
   Keyboard,
@@ -231,13 +232,11 @@ export function SessionRecordScreen({
           <View style={s.section}>
             <Text style={s.label}>교재별 진도</Text>
             {books.map((book) => (
-              <View key={book.id} style={s.card}>
-                <View style={s.bookHeading}>
-                  <Text style={s.bookName}>{book.name}</Text>
-                  {book.previousProgress && (
-                    <Text style={s.previous}>지난 {book.previousProgress}</Text>
-                  )}
-                </View>
+              <TextbookProgressCard
+                key={book.id}
+                title={book.name}
+                previousProgress={book.previousProgress}
+              >
                 {book.previousProgress && book.suggestions.length > 0 && (
                   <View style={s.chips}>
                     {[
@@ -286,7 +285,7 @@ export function SessionRecordScreen({
                     <Text style={s.previous}>교재 삭제</Text>
                   </Pressable>
                 )}
-              </View>
+              </TextbookProgressCard>
             ))}
             {editingBook && (
               <BookEditor
