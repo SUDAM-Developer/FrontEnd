@@ -92,9 +92,11 @@ export function HomeScreen({
             <View style={s.section}>
               <View style={s.sectionHeader}>
                 <Text style={s.sectionTitle}>{data.dateLabel}</Text>
-                <Text style={s.sectionCount}>{data.lessons.length}</Text>
+                <Text style={s.sectionCount}>
+                  {data.scheduleAvailable === false ? '-' : data.lessons.length}
+                </Text>
               </View>
-              {data.lessons.length > 0 && (
+              {data.scheduleAvailable !== false && data.lessons.length > 0 && (
                 <View
                   style={s.carouselViewport}
                   onLayout={(event) =>
@@ -154,7 +156,15 @@ export function HomeScreen({
                   </ScrollView>
                 </View>
               )}
-              {data.lessons.length === 0 && (
+              {data.scheduleAvailable === false && (
+                <View style={[s.tasks, { padding: 20, gap: 8 }]}>
+                  <Text style={s.taskLabel}>수업 일정은 아직 확인할 수 없어요</Text>
+                  <Text style={s.description}>
+                    학생·일정 연결을 준비 중이에요. 등록된 수업이 없다는 뜻은 아니에요.
+                  </Text>
+                </View>
+              )}
+              {data.scheduleAvailable !== false && data.lessons.length === 0 && (
                 <View style={s.emptyCard}>
                   <Image
                     source={emptyArt}
@@ -173,7 +183,7 @@ export function HomeScreen({
                   </View>
                 </View>
               )}
-              {data.lessons.length > 0 && (
+              {data.scheduleAvailable !== false && data.lessons.length > 0 && (
                 <View style={s.dots}>
                   {data.lessons.map((lesson, index) => (
                     <Pressable
@@ -200,24 +210,33 @@ export function HomeScreen({
                 ]}
               >
                 <Text style={s.sectionTitle}>할 일</Text>
-                <Text style={s.sectionCount}>{todoCount}</Text>
+                <Text style={s.sectionCount}>
+                  {data.tasksAvailable === false ? '-' : todoCount}
+                </Text>
               </View>
               <View style={[s.tasks, data.lessons.length === 0 && s.emptyTasks]}>
-                {data.tasks.map((task, index) => (
-                  <Pressable
-                    key={task.id}
-                    role="button"
-                    accessibilityLabel={`${task.label} ${task.count}건`}
-                    disabled={task.count === 0}
-                    onPress={() => onTask(task)}
-                    style={[s.task, index > 0 && s.taskBorder]}
-                  >
-                    <Text style={s.taskLabel}>{task.label}</Text>
-                    <Text style={[s.taskCount, task.count > 0 && s.taskCountActive]}>
-                      {task.count}건
-                    </Text>
-                  </Pressable>
-                ))}
+                {data.tasksAvailable === false && (
+                  <View style={{ padding: 20, gap: 8 }}>
+                    <Text style={s.taskLabel}>할 일 집계를 준비 중이에요</Text>
+                    <Text style={s.description}>리포트와 수입은 하단 탭에서 확인할 수 있어요.</Text>
+                  </View>
+                )}
+                {data.tasksAvailable !== false &&
+                  data.tasks.map((task, index) => (
+                    <Pressable
+                      key={task.id}
+                      role="button"
+                      accessibilityLabel={`${task.label} ${task.count}건`}
+                      disabled={task.count === 0}
+                      onPress={() => onTask(task)}
+                      style={[s.task, index > 0 && s.taskBorder]}
+                    >
+                      <Text style={s.taskLabel}>{task.label}</Text>
+                      <Text style={[s.taskCount, task.count > 0 && s.taskCountActive]}>
+                        {task.count}건
+                      </Text>
+                    </Pressable>
+                  ))}
               </View>
             </View>
           )}

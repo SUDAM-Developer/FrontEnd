@@ -1,61 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
-import { Tabs, useLocalSearchParams, useRouter } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { HomeScreen } from '@/features/home/HomeScreen';
-import { homePreviewData } from '@/features/home/previewData';
-import { CAN_PREVIEW } from '@/config/review';
-import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
-import type { HomeLesson } from '@/features/home/types';
+import { getSettings } from '@/apis/users';
+import { useApiResource } from '@/hooks/useApiResource';
+import { ApiState } from '@/components/ApiState';
 import { ActionButton } from '@/components/ActionButton';
 import { InstallSheet } from '@/features/home/InstallSheet';
 export default function Screen() {
   const router = useRouter();
-  const { preview } = useLocalSearchParams<{ preview?: string }>();
-  const [finishedPreview, setFinishedPreview] = useState<string | null>(null);
-  const previewLoading = CAN_PREVIEW && (preview === 'loading' || preview === 'fast');
-  const loading = previewLoading && finishedPreview !== preview;
-  useEffect(() => {
-    if (!previewLoading) return;
-    const timer = setTimeout(() => setFinishedPreview(preview!), preview === 'fast' ? 100 : 3000);
-    return () => clearTimeout(timer);
-  }, [preview, previewLoading]);
-  const { profile } = useOnboarding();
+  const { state, retry } = useApiResource(getSettings);
   const [installOpen, setInstallOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const data = CAN_PREVIEW
-    ? preview === 'empty'
-      ? {
-          ...homePreviewData,
-          teacherLabel: 'OOO 선생님 · 영어',
-          lessons: [],
-          tasks: homePreviewData.tasks.map((task) => ({
-            ...task,
-            count: task.id === 'income' ? 3 : task.count,
-          })),
-        }
-      : homePreviewData
-    : {
-        teacherLabel: `${profile.name} 선생님${profile.subjects.length ? ` · ${profile.subjects.join(' · ')}` : ''}`,
-        dateLabel: new Intl.DateTimeFormat('ko-KR', {
-          month: 'long',
-          day: 'numeric',
-          weekday: 'long',
-          timeZone: 'Asia/Seoul',
-        }).format(new Date()),
-        lessons: [],
-        tasks: [],
-      };
-  function record(lesson: HomeLesson) {
-    if (CAN_PREVIEW) router.push({ pathname: '/dev/home-record', params: { lessonId: lesson.id } });
-    else setNotice('수업 기록 API는 아직 연결되지 않았어요.');
-  }
+  if (state.status !== 'ready')
+    return (
+      <ApiState
+        message={state.status === 'error' ? state.message : undefined}
+        onRetry={state.status === 'error' ? retry : undefined}
+      />
+    );
+  const profile = state.data.profile;
+  const subjects = profile.subjects.map((subject) => subject.name);
+  const data = {
+    teacherLabel: `${profile.name} 선생님${subjects.length ? ` · ${subjects.join(' · ')}` : ''}`,
+    dateLabel: new Intl.DateTimeFormat('ko-KR', {
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+      timeZone: 'Asia/Seoul',
+    }).format(new Date()),
+    lessons: [],
+    tasks: [],
+    scheduleAvailable: false,
+    tasksAvailable: false,
+  };
   return (
     <>
       <Tabs.Screen options={{ headerShown: false }} />
       <HomeScreen
         data={data}
-        loading={loading}
-        firstTutoring={CAN_PREVIEW && preview === 'first'}
         onPreparationStep={(step) => {
           if (step === 'student') router.push('/tutoring/student');
           else if (step === 'tutoring') router.push('/tutoring/operation');
@@ -68,11 +51,11 @@ export default function Screen() {
         }}
         onStudents={() => router.push('/students')}
         onProfile={() => router.push('/settings')}
-        onRecord={record}
+        onRecord={() => setNotice('수업 일정 연결을 준비 중이에요.')}
         onInstallInfo={() => setInstallOpen(true)}
         onTask={(task) => {
           if (task.id === 'income') router.push('/income');
-          else if (task.id === 'records' && data.lessons[0]) record(data.lessons[0]);
+          else if (task.id === 'reports') router.push('/reports');
           else setNotice('해당 기능은 아직 연결되지 않았어요.');
         }}
       />
