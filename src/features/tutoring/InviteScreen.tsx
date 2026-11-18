@@ -2,6 +2,7 @@ import addImage from '../../../assets/images/add.svg';
 import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { ChipSelectField, TextField } from './FormFields';
 import type { TextFieldProps } from './FormFields';
 import { TutoringFormLayout, useSubmit } from './TutoringFormLayout';
@@ -55,6 +56,7 @@ function PhoneField({ value, onChangeText, onBlur, ...props }: PhoneFieldProps) 
 export function InviteScreen() {
   const [parents, setParents] = useState<Parent[]>([emptyParent()]);
   const [studentPhone, setStudentPhone] = useState('');
+  const router = useRouter();
 
   const updateParent = (index: number, patch: Partial<Parent>) =>
     setParents((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
@@ -66,8 +68,12 @@ export function InviteScreen() {
     parents.slice(1).every((p) => optionalOk(p.phone)) &&
     optionalOk(studentPhone);
 
-  // TODO: 저장·초대 링크 전송 API를 useSubmit 두 번째 인자로 넘기고, 성공하면 완료 화면으로 이동합니다.
-  const { submitting, failed, submit } = useSubmit(() => {});
+  // TODO: 저장·초대 링크 전송 API를 useSubmit 두 번째 인자로 넘기고, 완료 화면이 나오면 그쪽으로 이동합니다.
+  // 지금은 저장 후 과외 만들기 단계들을 닫고 홈으로 갑니다. (뒤로 가기로 입력 화면에 돌아오지 않게)
+  const { submitting, failed, submit } = useSubmit(() => {
+    if (router.canDismiss()) router.dismissAll();
+    router.replace('/home');
+  });
 
   return (
     <TutoringFormLayout

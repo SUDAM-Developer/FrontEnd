@@ -226,12 +226,6 @@ export const detail = StyleSheet.create({
     backgroundColor: c.surface.input,
   },
   helpText: { ...t.caption[1].medium, color: c.text.default.weak, textAlign: 'center' },
-  // 초안 생성 중 코멘트 입력칸 자리 (Figma: textFiled/default/Large 스켈레톤)
-  commentSkeleton: {
-    height: 160,
-    backgroundColor: c.surface.disabled,
-    borderRadius: radius.large,
-  },
   toastSlot: { height: 32, alignItems: 'center', justifyContent: 'center' },
   toast: {
     padding: padding[8],
