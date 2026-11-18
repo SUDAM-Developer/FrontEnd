@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { s } from './styles';
+import { knownTaskTotal } from './apiData';
 import type { HomeData } from './types';
 /** 빠른 조회의 깜빡임을 줄이기 위해 500ms 이상 기다릴 때만 표시합니다. */
 export function HomeLoading({ data }: { data: HomeData }) {
@@ -31,9 +32,7 @@ export function HomeLoading({ data }: { data: HomeData }) {
             </View>
             <View style={[s.sectionHeader, s.tasksHeader]}>
               <Text style={s.sectionTitle}>할 일</Text>
-              <Text style={s.sectionCount}>
-                {data.tasks.reduce((sum, task) => sum + task.count, 0)}
-              </Text>
+              <Text style={s.sectionCount}>{knownTaskTotal(data.tasks)}</Text>
             </View>
             <View style={[s.skeleton, s.tasksSkeleton]} />
           </View>

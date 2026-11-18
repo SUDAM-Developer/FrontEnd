@@ -7,9 +7,18 @@ import { useApiResource } from '@/hooks/useApiResource';
 import { ApiState } from '@/components/ApiState';
 import { ActionButton } from '@/components/ActionButton';
 import { InstallSheet } from '@/features/home/InstallSheet';
+import { loadHomeSummary } from '@/features/home/apiData';
+import type { HomeTask } from '@/features/home/types';
+const PENDING_TASKS: HomeTask[] = [
+  { id: 'records', label: '미기록 수업', count: null },
+  { id: 'messages', label: '안 보낸 카톡', count: null },
+  { id: 'reports', label: '발송 대기 정산 리포트', count: null },
+  { id: 'income', label: '미입금', count: null },
+];
 export default function Screen() {
   const router = useRouter();
   const { state, retry } = useApiResource(getSettings);
+  const { state: summary } = useApiResource(loadHomeSummary);
   const [installOpen, setInstallOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   if (state.status !== 'ready')
@@ -29,16 +38,19 @@ export default function Screen() {
       weekday: 'long',
       timeZone: 'Asia/Seoul',
     }).format(new Date()),
+    // 일정 조회 API가 아직 없어 오늘 수업은 0건으로 보고 수업 없음 시안을 표시합니다.
     lessons: [],
-    tasks: [],
-    scheduleAvailable: false,
-    tasksAvailable: false,
+    // 할 일 조회에 실패하면 각 항목을 0건이 아닌 `-`로 표시합니다.
+    tasks: summary.status === 'ready' ? summary.data.tasks : PENDING_TASKS,
   };
   return (
     <>
       <Tabs.Screen options={{ headerShown: false }} />
       <HomeScreen
         data={data}
+        // 첫 과외 여부를 확인하기 전에는 수업 없음 화면이 잠깐 보이지 않도록 로딩을 표시합니다.
+        loading={summary.status === 'loading'}
+        firstTutoring={summary.status === 'ready' && summary.data.firstTutoring}
         onPreparationStep={(step) => {
           if (step === 'student') router.push('/tutoring/student');
           else if (step === 'tutoring') router.push('/tutoring/operation');

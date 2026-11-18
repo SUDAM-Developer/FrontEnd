@@ -2,9 +2,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { primitive } from '@/styles/colors';
 export const preparationSteps = [
   { id: 'introduction', title: '소개서 만들기', description: '무료 진단과 미리보기부터' },
-  { id: 'student', title: '학생 정보 넣기', description: '학생을 찾으며 상담에서 들은 내용으로' },
+  { id: 'student', title: '학생 정보 넣기', description: '학생을 찾으면 상담에서 들은 내용으로' },
   { id: 'curriculum', title: '커리큘럼 받기', description: '교재, 수업 횟수, 기간별 진도' },
-  { id: 'tutoring', title: '과외 만들기', description: '운영 방식·유형 확인, 학부모님 초대' },
+  { id: 'tutoring', title: '과외 만들기', description: '운영 방식 유형 확인, 학부모님 초대' },
 ] as const;
 export type PreparationStep = (typeof preparationSteps)[number]['id'];
 export function FirstTutoring({

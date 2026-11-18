@@ -10,6 +10,7 @@ import type { HomeData, HomeLesson, HomeTask } from './types';
 import { s } from './styles';
 import { HomeLoading } from './HomeLoading';
 import { FirstTutoring } from './FirstTutoring';
+import { knownTaskTotal } from './apiData';
 import type { PreparationStep } from './FirstTutoring';
 import emptyArt from '../../../assets/images/home-empty.svg';
 
@@ -40,7 +41,7 @@ export function HomeScreen({
   const [cardWidth, setCardWidth] = useState(342);
   const cardStride = cardWidth + 16;
   const carousel = useRef<ComponentRef<typeof ScrollView>>(null);
-  const todoCount = data.tasks.reduce((sum, task) => sum + task.count, 0);
+  const todoCount = knownTaskTotal(data.tasks);
   return (
     <SafeAreaView edges={['top']} style={s.safe}>
       <View style={s.header}>
@@ -210,33 +211,28 @@ export function HomeScreen({
                 ]}
               >
                 <Text style={s.sectionTitle}>할 일</Text>
-                <Text style={s.sectionCount}>
-                  {data.tasksAvailable === false ? '-' : todoCount}
-                </Text>
+                <Text style={s.sectionCount}>{todoCount}</Text>
               </View>
               <View style={[s.tasks, data.lessons.length === 0 && s.emptyTasks]}>
-                {data.tasksAvailable === false && (
-                  <View style={{ padding: 20, gap: 8 }}>
-                    <Text style={s.taskLabel}>할 일 집계를 준비 중이에요</Text>
-                    <Text style={s.description}>리포트와 수입은 하단 탭에서 확인할 수 있어요.</Text>
-                  </View>
-                )}
-                {data.tasksAvailable !== false &&
-                  data.tasks.map((task, index) => (
-                    <Pressable
-                      key={task.id}
-                      role="button"
-                      accessibilityLabel={`${task.label} ${task.count}건`}
-                      disabled={task.count === 0}
-                      onPress={() => onTask(task)}
-                      style={[s.task, index > 0 && s.taskBorder]}
-                    >
-                      <Text style={s.taskLabel}>{task.label}</Text>
-                      <Text style={[s.taskCount, task.count > 0 && s.taskCountActive]}>
-                        {task.count}건
-                      </Text>
-                    </Pressable>
-                  ))}
+                {data.tasks.map((task, index) => (
+                  <Pressable
+                    key={task.id}
+                    role="button"
+                    accessibilityLabel={
+                      task.count === null
+                        ? `${task.label} 건수 확인 불가`
+                        : `${task.label} ${task.count}건`
+                    }
+                    disabled={!task.count}
+                    onPress={() => onTask(task)}
+                    style={[s.task, index > 0 && s.taskBorder]}
+                  >
+                    <Text style={s.taskLabel}>{task.label}</Text>
+                    <Text style={[s.taskCount, !!task.count && s.taskCountActive]}>
+                      {task.count === null ? '-' : `${task.count}건`}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
             </View>
           )}
