@@ -3,14 +3,16 @@ import kakaoSymbol from '../../../assets/images/kakao-symbol.svg';
 import logoSymbol from '../../../assets/images/login-logo-symbol.svg';
 import sudamWordmark from '../../../assets/images/login-sudam.svg';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { KAKAO_LOGIN_URL } from '@/apis/auth';
 import { Loading } from '@/components/Loading';
 import { semantic } from '@/styles/colors';
 import { gap, grid, padding, radius } from '@/styles/measurement';
 import { typography } from '@/styles/typography';
+import { clearLoginFailure, peekLoginFailure } from './loginNotice';
 
 /** 카카오 로그인 디자인 가이드의 브랜드 색입니다. 서비스 토큰이 아니라 고정값으로 둡니다. */
 const KAKAO_YELLOW = '#FEE500';
@@ -21,27 +23,49 @@ const KAKAO_YELLOW = '#FEE500';
  */
 const SPACE = { top: 126, middle: 126, bottom: 163 } as const;
 
-/** 카카오 인가 → 서비스 로그인까지 끝나면 resolve 됩니다. 사용자가 취소하면 'cancelled'를 돌려줍니다. */
+/**
+ * 카카오 로그인을 시작합니다. 웹은 서버 로그인 주소로 페이지를 옮기므로 돌아오지 않고,
+ * 결과는 `/login/success`·`/login/failure`에서 처리합니다.
+ * 미리보기처럼 화면 안에서 끝나는 경우 resolve 되면 약관 동의로 이동하고, 'cancelled'면 그대로 머뭅니다.
+ */
 export type KakaoLogin = (signal: AbortSignal) => Promise<void | 'cancelled'>;
 
+const startKakaoLogin: KakaoLogin = () => {
+  if (Platform.OS !== 'web') {
+    // TODO: 앱(iOS·Android)은 서버가 앱 스킴으로 돌려보내는 방식이 정해진 뒤 연결합니다.
+    return Promise.reject(new Error('Kakao login is only available on web'));
+  }
+  window.location.assign(KAKAO_LOGIN_URL);
+  return new Promise<never>(() => {});
+};
+
 type Props = {
-  /** 카카오 SDK·로그인 API 연결 전에는 생략합니다. 이 경우 바로 약관 동의로 이동합니다. */
+  /** 미리보기에서 로그인 결과를 흉내 낼 때만 넘깁니다. */
   onLogin?: KakaoLogin;
 };
 
-export default function LoginScreen({ onLogin }: Props) {
+export default function LoginScreen({ onLogin = startKakaoLogin }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(peekLoginFailure);
   const inFlight = useRef(false);
   const mounted = useRef(true);
   const controller = useRef<AbortController | null>(null);
 
   useEffect(() => {
     mounted.current = true;
+    clearLoginFailure();
+    // 카카오 화면에서 뒤로 가기로 돌아오면 브라우저가 이전 상태(로딩 중)를 그대로 복원하므로 풀어 줍니다.
+    const restore = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      inFlight.current = false;
+      setLoading(false);
+    };
+    if (Platform.OS === 'web') window.addEventListener('pageshow', restore);
     return () => {
       mounted.current = false;
       controller.current?.abort();
+      if (Platform.OS === 'web') window.removeEventListener('pageshow', restore);
     };
   }, []);
 
@@ -52,11 +76,9 @@ export default function LoginScreen({ onLogin }: Props) {
     const request = new AbortController();
     controller.current = request;
     try {
-      if (onLogin) {
-        setLoading(true);
-        const result = await onLogin(request.signal);
-        if (result === 'cancelled') return;
-      }
+      setLoading(true);
+      const result = await onLogin(request.signal);
+      if (result === 'cancelled') return;
       if (!mounted.current || request.signal.aborted) return;
       router.replace('/terms');
     } catch {
