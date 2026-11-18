@@ -16,14 +16,15 @@ const PAID_TOAST = '입금 완료 · 학부모 링크에도 입금 확인으로 
 function InvoiceCard({ invoice, onPress }: { invoice: IncomeInvoice; onPress: () => void }) {
   const status = paymentStatus(invoice);
   const paid = status === '입금 완료';
-  const note =
-    invoice.receivedAmount > 0 && !paid
-      ? `받은 금액 ${won(invoice.receivedAmount)}`
-      : !paid && invoice.parentReportedAt
-        ? `학부모님이 [입금했어요]를 눌렀어요 · ${invoice.parentReportedAt}`
-        : !paid
-          ? invoice.reminderText
-          : undefined;
+  const note = paid
+    ? undefined
+    : invoice.noticeResent
+      ? '학부모님께 카톡으로 입금 안내를 다시 보냈어요'
+      : invoice.receivedAmount > 0
+        ? `받은 금액 ${won(invoice.receivedAmount)}`
+        : invoice.parentReportedAt
+          ? `학부모님이 [입금했어요]를 눌렀어요 · ${invoice.parentReportedAt}`
+          : invoice.reminderText;
   return (
     <Pressable
       role="button"
@@ -54,6 +55,7 @@ function InvoiceCard({ invoice, onPress }: { invoice: IncomeInvoice; onPress: ()
 export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?: () => void }) {
   // API 연동 전: 시트에서 확인한 받은 금액을 화면에만 반영합니다.
   const [received, setReceived] = useState<Record<string, number>>({});
+  const [resent, setResent] = useState<Record<string, true>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -65,9 +67,11 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
 
   const invoices =
     state.status === 'ready'
-      ? state.data.invoices.map((invoice) =>
-          invoice.id in received ? { ...invoice, receivedAmount: received[invoice.id] } : invoice,
-        )
+      ? state.data.invoices.map((invoice) => ({
+          ...invoice,
+          receivedAmount: received[invoice.id] ?? invoice.receivedAmount,
+          noticeResent: resent[invoice.id] ?? invoice.noticeResent,
+        }))
       : [];
   const summary =
     state.status === 'ready'
@@ -197,6 +201,7 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
             // TODO: 카톡 공유 연동 전이라 받은 금액만 반영하고 전송 완료 토스트를 보여 줍니다.
             // TODO: 보호자 호칭은 API 데이터 확정 후 교체합니다. (Figma: 'OOO 어머님')
             record(selected.id, Math.min(amount, selected.billedAmount));
+            setResent((prev) => ({ ...prev, [selected.id]: true }));
             setToast(`${selected.studentName} 어머님께 카톡을 보냈어요`);
           }}
         />
