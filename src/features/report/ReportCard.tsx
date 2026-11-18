@@ -1,15 +1,22 @@
 import { Image } from 'expo-image';
 import { Pressable, Text, View } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { s } from './styles';
 import { formatPeriod, formatReadAt, reportStatusLabel } from './types';
 import type { ReportItem, ReportStatus } from './types';
 import createdIcon from '../../../assets/images/report-created.svg';
 import sentIcon from '../../../assets/images/report-sent.svg';
 
-export function ReportStatusTag({ status }: { status: ReportStatus }) {
+export function ReportStatusTag({
+  status,
+  style,
+}: {
+  status: ReportStatus;
+  style?: StyleProp<ViewStyle>;
+}) {
   const created = status === 'created';
   return (
-    <View style={[s.statusTag, created ? s.statusCreated : s.statusSent]}>
+    <View style={[s.statusTag, created ? s.statusCreated : s.statusSent, style]}>
       <Image source={created ? createdIcon : sentIcon} style={s.statusIcon} aria-hidden />
       <Text style={[s.statusText, created ? s.statusTextCreated : s.statusTextSent]}>
         {reportStatusLabel[status]}

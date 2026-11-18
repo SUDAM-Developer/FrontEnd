@@ -1,4 +1,5 @@
 import { ScrollView, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { ReportCard } from './ReportCard';
@@ -24,7 +25,13 @@ export function ReportScreen({ state, onRetry }: { state: ReportState; onRetry?:
           ) : state.status === 'ready' ? (
             <View style={s.list}>
               {state.data.reports.map((report) => (
-                <ReportCard key={report.id} report={report} />
+                <ReportCard
+                  key={report.id}
+                  report={report}
+                  onPress={() =>
+                    router.push({ pathname: '/report/[id]', params: { id: report.id } })
+                  }
+                />
               ))}
             </View>
           ) : (
