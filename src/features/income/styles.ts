@@ -98,4 +98,50 @@ export const s = StyleSheet.create({
     gap: gap[16],
   },
   errorText: { ...t.body[4].regular, color: c.text.default.weak },
+  cardPressed: { opacity: 0.8 },
+  toastSlot: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+  },
+  toast: {
+    padding: padding[8],
+    backgroundColor: c.surface.default,
+    borderRadius: radius.full,
+    // Figma drop-shadow 1px 1px 6.8px blue/100
+    boxShadow: `1px 1px 6.8px ${primitive.blue[100]}`,
+  },
+  toastText: { ...t.caption[1].medium, color: c.text.brand.assistive, textAlign: 'center' },
+});
+
+/** 입금 확인 시트 (Figma: T-15 수입 · 입금 현황 bottomSheet) */
+export const sheet = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(45, 48, 61, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  dismiss: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 },
+  sheet: {
+    width: '100%',
+    maxWidth: 390,
+    maxHeight: '92%',
+    backgroundColor: c.surface.subtle,
+    borderTopLeftRadius: radius.large,
+    borderTopRightRadius: radius.large,
+  },
+  scroll: { gap: gap[12] },
+  handleArea: { alignItems: 'center', paddingVertical: padding[12] },
+  handle: { width: 56, height: 4, borderRadius: radius.full, backgroundColor: c.border.default },
+  body: { paddingHorizontal: padding[24], gap: gap[12] },
+  texts: { gap: gap[8] },
+  title: { ...t.heading[1].bold, color: c.text.default.normal },
+  description: { ...t.body[4].semiBold, color: c.text.default.weak },
+  cta: { gap: gap[8], paddingHorizontal: padding[24], paddingTop: padding[20], paddingBottom: 44 },
 });

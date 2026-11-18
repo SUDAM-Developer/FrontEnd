@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { s } from './styles';
@@ -7,22 +8,31 @@ import { paymentStatus, won } from './types';
 import type { IncomeInvoice, IncomeState } from './types';
 import gradient from '../../../assets/images/income-gradient.svg';
 import { IncomeGraphic } from '@/components/IncomeGraphic';
+import { PaymentSheet } from './PaymentSheet';
 
-function InvoiceCard({ invoice }: { invoice: IncomeInvoice }) {
+const TOAST_MS = 3000;
+const PAID_TOAST = '입금 완료 · 학부모 링크에도 입금 확인으로 표시돼요';
+
+function InvoiceCard({ invoice, onPress }: { invoice: IncomeInvoice; onPress: () => void }) {
   const status = paymentStatus(invoice);
-  const paid = status === '입금완료';
-  const note =
-    invoice.receivedAmount > 0 && !paid
-      ? `받은 금액 ${won(invoice.receivedAmount)}`
-      : !paid && invoice.parentReportedAt
-        ? `학부모님이 [입금했어요]를 눌렀어요 · ${invoice.parentReportedAt}`
-        : !paid
-          ? invoice.reminderText
-          : undefined;
+  const paid = status === '입금 완료';
+  const note = paid
+    ? undefined
+    : invoice.noticeResent
+      ? '학부모님께 카톡으로 입금 안내를 다시 보냈어요'
+      : invoice.receivedAmount > 0
+        ? `받은 금액 ${won(invoice.receivedAmount)}`
+        : invoice.parentReportedAt
+          ? `학부모님이 [입금했어요]를 눌렀어요 · ${invoice.parentReportedAt}`
+          : invoice.reminderText;
   return (
-    <View
-      style={s.card}
+    <Pressable
+      role="button"
+      disabled={paid}
+      onPress={onPress}
+      style={({ pressed }) => [s.card, pressed && s.cardPressed]}
       accessibilityLabel={`${invoice.studentName}, ${status}, ${won(invoice.billedAmount)}`}
+      accessibilityHint={paid ? undefined : '입금 확인 열기'}
     >
       <View style={s.cardHeader}>
         <Text style={s.student}>{invoice.studentName}</Text>
@@ -39,10 +49,53 @@ function InvoiceCard({ invoice }: { invoice: IncomeInvoice }) {
           <Text style={s.noteText}>{note}</Text>
         </View>
       )}
-    </View>
+    </Pressable>
   );
 }
 export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?: () => void }) {
+  // API 연동 전: 시트에서 확인한 받은 금액을 화면에만 반영합니다.
+  const [received, setReceived] = useState<Record<string, number>>({});
+  const [resent, setResent] = useState<Record<string, true>>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), TOAST_MS);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  const invoices =
+    state.status === 'ready'
+      ? state.data.invoices.map((invoice) => ({
+          ...invoice,
+          receivedAmount: received[invoice.id] ?? invoice.receivedAmount,
+          noticeResent: resent[invoice.id] ?? invoice.noticeResent,
+        }))
+      : [];
+  const summary =
+    state.status === 'ready'
+      ? (() => {
+          const delta = state.data.invoices.reduce(
+            (sum, invoice) =>
+              invoice.id in received ? sum + received[invoice.id] - invoice.receivedAmount : sum,
+            0,
+          );
+          const { expectedAmount, receivedAmount, outstandingAmount } = state.data.summary;
+          return {
+            expectedAmount,
+            receivedAmount: receivedAmount + delta,
+            outstandingAmount: Math.max(0, outstandingAmount - delta),
+          };
+        })()
+      : null;
+  const selected = invoices.find((invoice) => invoice.id === selectedId);
+
+  const record = (id: string, amount: number) => {
+    setReceived((prev) => ({ ...prev, [id]: amount }));
+    setSelectedId(null);
+  };
+
   return (
     <SafeAreaView edges={['top']} style={s.safe}>
       <View style={s.phone}>
@@ -63,11 +116,11 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
                 ))}
               </View>
             </View>
-          ) : state.status === 'ready' ? (
+          ) : state.status === 'ready' && summary ? (
             <>
               <View
                 style={s.summary}
-                accessibilityLabel={`이번달 교육비 ${won(state.data.summary.expectedAmount)}, 입금 ${won(state.data.summary.receivedAmount)}, 미수금 ${won(state.data.summary.outstandingAmount)}`}
+                accessibilityLabel={`이번달 교육비 ${won(summary.expectedAmount)}, 입금 ${won(summary.receivedAmount)}, 미수금 ${won(summary.outstandingAmount)}`}
               >
                 <Image
                   source={gradient}
@@ -77,18 +130,16 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
                 />
                 <View>
                   <Text style={s.summaryLabel}>이번달 교육비</Text>
-                  <Text style={s.amount}>{won(state.data.summary.expectedAmount)}</Text>
+                  <Text style={s.amount}>{won(summary.expectedAmount)}</Text>
                 </View>
                 <IncomeGraphic size={88} style={s.illustration} />
                 <View style={s.totals}>
-                  <Text style={s.totalText}>입금 {won(state.data.summary.receivedAmount)}</Text>
+                  <Text style={s.totalText}>입금 {won(summary.receivedAmount)}</Text>
                   <View style={s.separator} />
-                  <Text style={s.totalText}>
-                    미수금 {won(state.data.summary.outstandingAmount)}
-                  </Text>
+                  <Text style={s.totalText}>미수금 {won(summary.outstandingAmount)}</Text>
                 </View>
               </View>
-              {state.data.invoices.length > 0 && (
+              {invoices.length > 0 && (
                 <View style={s.info}>
                   <Text style={s.infoIcon}>ⓘ</Text>
                   <Text style={s.infoText}>
@@ -100,14 +151,18 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
                 <Text role="heading" style={s.sectionTitle}>
                   학생별
                 </Text>
-                {state.data.invoices.length === 0 ? (
+                {invoices.length === 0 ? (
                   <View style={s.empty}>
                     <Text style={s.emptyText}>이번달 청구가 아직 없어요</Text>
                   </View>
                 ) : (
                   <View style={s.list}>
-                    {state.data.invoices.map((invoice) => (
-                      <InvoiceCard key={invoice.id} invoice={invoice} />
+                    {invoices.map((invoice) => (
+                      <InvoiceCard
+                        key={invoice.id}
+                        invoice={invoice}
+                        onPress={() => setSelectedId(invoice.id)}
+                      />
                     ))}
                   </View>
                 )}
@@ -126,7 +181,31 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
             </View>
           )}
         </ScrollView>
+        {toast && (
+          <View style={s.toastSlot}>
+            <View role="status" accessibilityLiveRegion="polite" style={s.toast}>
+              <Text style={s.toastText}>{toast}</Text>
+            </View>
+          </View>
+        )}
       </View>
+      {selected && (
+        <PaymentSheet
+          invoice={selected}
+          onClose={() => setSelectedId(null)}
+          onPaidInFull={() => {
+            record(selected.id, selected.billedAmount);
+            setToast(PAID_TOAST);
+          }}
+          onResend={(amount) => {
+            // TODO: 카톡 공유 연동 전이라 받은 금액만 반영하고 전송 완료 토스트를 보여 줍니다.
+            // TODO: 보호자 호칭은 API 데이터 확정 후 교체합니다. (Figma: 'OOO 어머님')
+            record(selected.id, Math.min(amount, selected.billedAmount));
+            setResent((prev) => ({ ...prev, [selected.id]: true }));
+            setToast(`${selected.studentName} 어머님께 카톡을 보냈어요`);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
