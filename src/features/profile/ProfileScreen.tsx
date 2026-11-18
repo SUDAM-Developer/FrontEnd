@@ -68,7 +68,7 @@ export default function ProfileScreen({ onSave, initialProfile }: Props) {
         else router.replace('/settings');
       } else {
         if (router.canDismiss()) router.dismissAll();
-        router.replace('/home');
+        router.replace('/tutoring/operation');
       }
     } catch {
       if (mounted.current && !request.signal.aborted) setFailed(true);

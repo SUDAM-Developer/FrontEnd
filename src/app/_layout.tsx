@@ -1,4 +1,5 @@
 import '@/styles/webInputStyles';
+import { TutoringDraftProvider } from '@/features/tutoring/TutoringDraftProvider';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -8,12 +9,14 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <OnboardingProvider>
-        <PushBannerProvider>
-          <StatusBar style="dark" />
-          <Stack
-            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' } }}
-          />
-        </PushBannerProvider>
+        <TutoringDraftProvider>
+          <PushBannerProvider>
+            <StatusBar style="dark" />
+            <Stack
+              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' } }}
+            />
+          </PushBannerProvider>
+        </TutoringDraftProvider>
       </OnboardingProvider>
     </SafeAreaProvider>
   );
