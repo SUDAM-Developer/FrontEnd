@@ -28,6 +28,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { semantic } from '@/styles/colors';
 import { gap, padding, radius } from '@/styles/measurement';
 import { typography } from '@/styles/typography';
+import { toJamo } from '@/utils/hangul';
 
 type BankInfo = {
   name: string;
@@ -76,6 +77,15 @@ export const OTHER_BANK = '기타' satisfies Bank;
 /** "국민은행"처럼 "은행"을 붙여 검색해도 찾을 수 있게 공백과 "은행"을 빼고 비교합니다. */
 const normalize = (text: string) => text.replace(/\s|은행/g, '').toLowerCase();
 
+/**
+ * 입력 중인 글자('신한은ㅎ', 자판이 잠깐 만드는 '신한읂')로도 찾도록 낱자로 풀어 비교합니다.
+ * 이름 뒤에 "은행"을 붙여 두어 "신한은행"까지 이어서 쳐도 계속 보입니다.
+ */
+const searchKey = (text: string) => toJamo(text.replace(/\s/g, '').toLowerCase());
+const BANK_KEYS = new Map<string, string>(
+  BANKS.map((bank) => [bank.name, searchKey(`${bank.name}은행`)]),
+);
+
 export type BankSheetProps = {
   visible: boolean;
   selected: Bank | null;
@@ -89,7 +99,8 @@ export function BankSheet({ visible, selected, onSelect, onClose }: BankSheetPro
   const insets = useSafeAreaInsets();
 
   const keyword = normalize(query);
-  const banks = keyword ? BANKS.filter((bank) => normalize(bank.name).includes(keyword)) : BANKS;
+  const typed = searchKey(query);
+  const banks = keyword ? BANKS.filter((bank) => BANK_KEYS.get(bank.name)?.includes(typed)) : BANKS;
   // "국민은행"처럼 은행 이름을 그대로 입력하고 완료를 누르면 그 은행을 고릅니다.
   const exactMatch = keyword ? BANKS.find((bank) => normalize(bank.name) === keyword) : undefined;
 
@@ -201,7 +212,8 @@ const s = StyleSheet.create({
   sheet: {
     width: '100%',
     maxWidth: 390,
-    maxHeight: '80%',
+    // 검색 결과 수에 따라 시트 높이가 바뀌면 입력할 때마다 출렁여서 높이를 고정합니다.
+    height: '80%',
     gap: gap[8],
     backgroundColor: semantic.surface.subtle,
     borderTopLeftRadius: radius.large,
