@@ -77,9 +77,11 @@ export const empty = StyleSheet.create({
 
 /** 정산 리포트 상세 (Figma: T-14 정산 리포트/정상) */
 export const detail = StyleSheet.create({
-  safe: { flex: 1, alignItems: 'center', backgroundColor: c.surface.input },
+  // 탭 화면((tabs)/_layout)과 같이 폰 바깥은 회색, 폰 안은 흰색으로 둡니다.
+  page: { flex: 1, alignItems: 'center', backgroundColor: '#f3f4f7' },
+  safe: { flex: 1, width: '100%', maxWidth: 390, backgroundColor: c.surface.input },
   // 웹에서는 상태바 높이만큼 위를 띄웁니다. (TutoringFormLayout과 같음)
-  phone: { flex: 1, width: '100%', maxWidth: 390, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  phone: { flex: 1, paddingTop: Platform.OS === 'web' ? 44 : 0 },
   navBar: {
     flexDirection: 'row',
     alignItems: 'center',
