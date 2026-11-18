@@ -4,3 +4,36 @@
     height: 100dvh;
   }
 }
+
+/* PC에서는 모바일 앱 영역을 가운데 배치하고, 낮은 창에서는 창 높이에 맞춥니다. */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f7;
+  }
+
+  #root {
+    flex: none;
+    width: 390px;
+    max-width: 100%;
+    height: min(844px, 100vh);
+    height: min(844px, 100dvh);
+    max-height: 100%;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgb(15 17 23 / 8%);
+  }
+  /* React Native Web의 모달 포털도 같은 앱 영역을 사용합니다. */
+  body > div:not(#root) [aria-modal='true'] {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    width: 390px;
+    max-width: 100%;
+    height: min(844px, 100vh);
+    height: min(844px, 100dvh);
+    transform: translate(-50%, -50%);
+  }
+}
