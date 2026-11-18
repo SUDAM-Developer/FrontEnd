@@ -58,7 +58,7 @@ export function PaymentSheet({ invoice, onClose, onPaidInFull, onResend }: Props
                   // 청구 금액보다 큰 받은 금액은 입력되지 않게 막습니다.
                   if (Number(next) <= invoice.billedAmount) setAmount(next);
                 }}
-                placeholder="받은 금액을 입력해주세요"
+                placeholder="금액을 알려주세요"
                 keyboardType="number-pad"
                 inputMode="numeric"
               />
