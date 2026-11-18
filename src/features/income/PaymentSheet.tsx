@@ -64,7 +64,12 @@ export function PaymentSheet({ invoice, onClose, onPaidInFull, onResend }: Props
               />
             </View>
             <View style={s.cta}>
-              <ActionButton label="전액 입금 완료" onPress={onPaidInFull} />
+              <ActionButton
+                label="전액 입금 완료"
+                // 받은 금액을 입력하면 일부 입금이라 전액 완료는 누를 수 없게 합니다.
+                disabled={Number(amount) > 0}
+                onPress={onPaidInFull}
+              />
               <ActionButton
                 label="카톡으로 입금 안내 재전송"
                 variant="secondary"
