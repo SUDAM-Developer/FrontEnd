@@ -18,7 +18,7 @@ export type IncomeState =
   | { status: 'error'; message: string }
   | { status: 'unavailable' };
 export function paymentStatus(invoice: IncomeInvoice) {
-  if (invoice.receivedAmount >= invoice.billedAmount) return '입금완료';
+  if (invoice.receivedAmount >= invoice.billedAmount) return '입금 완료';
   if (invoice.receivedAmount > 0) return '일부 입금';
   return '입금 대기';
 }
