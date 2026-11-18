@@ -23,9 +23,12 @@ export function TextInput({
   value,
   onFocus,
   onBlur,
+  onContentSizeChange,
   ...props
 }: TextInputProps) {
   const [focused, setFocused] = useState(false);
+  // 여러 줄 입력은 내용 높이만큼 늘어납니다. (웹 textarea는 기본 2줄로 잘립니다)
+  const [contentHeight, setContentHeight] = useState<number>();
   const error = Boolean(errorMessage);
   const filled = Boolean(value);
   const message = errorMessage ?? helperText;
@@ -53,7 +56,15 @@ export function TextInput({
             setFocused(false);
             onBlur?.(e);
           }}
-          style={[s.input, error && s.inputError]}
+          onContentSizeChange={(e) => {
+            if (props.multiline) setContentHeight(e.nativeEvent.contentSize.height);
+            onContentSizeChange?.(e);
+          }}
+          style={[
+            s.input,
+            props.multiline && contentHeight !== undefined && { height: contentHeight },
+            error && s.inputError,
+          ]}
         />
         {trailing}
       </View>

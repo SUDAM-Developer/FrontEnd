@@ -6,6 +6,8 @@ export type IncomeInvoice = {
   receivedAmount: number;
   parentReportedAt?: string;
   reminderText?: string;
+  /** 선생님이 카톡으로 입금 안내를 다시 보냈는지 */
+  noticeResent?: boolean;
 };
 /** API 미확정: 화면 데이터 모델입니다. summary는 목록과 독립적인 집계 응답을 받을 수 있게 구분합니다. */
 export type IncomeData = {
@@ -18,7 +20,7 @@ export type IncomeState =
   | { status: 'error'; message: string }
   | { status: 'unavailable' };
 export function paymentStatus(invoice: IncomeInvoice) {
-  if (invoice.receivedAmount >= invoice.billedAmount) return '입금완료';
+  if (invoice.receivedAmount >= invoice.billedAmount) return '입금 완료';
   if (invoice.receivedAmount > 0) return '일부 입금';
   return '입금 대기';
 }

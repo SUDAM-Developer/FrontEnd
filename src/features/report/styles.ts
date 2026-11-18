@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
-import { semantic as c } from '@/styles/colors';
+import { Platform, StyleSheet } from 'react-native';
+import { primitive, semantic as c } from '@/styles/colors';
 import { typography as t } from '@/styles/typography';
-import { gap, grid, padding, radius } from '@/styles/measurement';
+import { gap, grid, lineWeight, padding, radius } from '@/styles/measurement';
 
 export const s = StyleSheet.create({
   safe: { flex: 1, alignItems: 'center', backgroundColor: c.surface.input },
@@ -73,4 +73,203 @@ export const empty = StyleSheet.create({
   texts: { alignItems: 'center', gap: gap[4] },
   title: { ...t.body[1].bold, color: c.text.default.strong, textAlign: 'center' },
   description: { ...t.body[4].medium, color: c.text.default.weak, textAlign: 'center' },
+});
+
+/** 정산 리포트 상세 (Figma: T-14 정산 리포트/정상) */
+export const detail = StyleSheet.create({
+  // 탭 화면((tabs)/_layout)과 같이 폰 바깥은 회색, 폰 안은 흰색으로 둡니다.
+  page: { flex: 1, alignItems: 'center', backgroundColor: '#f3f4f7' },
+  safe: { flex: 1, width: '100%', maxWidth: 390, backgroundColor: c.surface.input },
+  // 웹에서는 상태바 높이만큼 위를 띄웁니다. (TutoringFormLayout과 같음)
+  phone: { flex: 1, paddingTop: Platform.OS === 'web' ? 44 : 0 },
+  navBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: padding[24],
+    paddingVertical: padding[12],
+  },
+  icon: { width: 24, height: 24 },
+  navTitle: { ...t.body[1].bold, color: c.text.default.strong, textAlign: 'center' },
+  content: {
+    paddingHorizontal: padding[24],
+    paddingVertical: padding[12],
+    gap: gap[20],
+  },
+  summary: { paddingVertical: padding[8], gap: gap[8] },
+  summaryTexts: { gap: gap[4] },
+  // 발송 완료 화면의 상태 태그는 목록 카드보다 좌우 여백이 좁습니다.
+  detailStatusTag: { padding: padding[4], alignSelf: 'flex-start' },
+  title: { ...t.heading[1].bold, color: c.text.default.normal },
+  meta: { flexDirection: 'row', gap: gap[8] },
+  metaText: { ...t.body[3].semiBold, color: c.text.default.neutral },
+  stats: { flexDirection: 'row', gap: 9, paddingVertical: padding[12] },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: gap[4],
+    // Figma는 좌우 16이지만 "이해도 · 평균"이 상자보다 넓어 넘쳐 보입니다. 가운데 정렬이라 4로 줄여 한 줄을 유지합니다.
+    paddingHorizontal: padding[4],
+    paddingVertical: padding[12],
+    backgroundColor: c.surface.brand,
+    borderRadius: radius.medium,
+  },
+  statLabel: { ...t.body[5].semiBold, color: c.text.default.neutral, textAlign: 'center' },
+  statValue: { ...t.body[1].bold, color: c.text.brand.assistive, textAlign: 'center' },
+  section: { gap: gap[8] },
+  progressLabel: { paddingHorizontal: padding[8] },
+  sectionLabel: { ...t.body[4].semiBold, color: c.text.default.neutral },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: padding[8],
+  },
+  commentLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: gap[12],
+    paddingHorizontal: padding[8],
+  },
+  feeLabel: { paddingHorizontal: padding[8] },
+  aiTag: {
+    paddingHorizontal: padding[8],
+    paddingVertical: padding[4],
+    borderRadius: radius.large,
+    backgroundColor: c.surface.brand,
+  },
+  aiTagText: { ...t.caption[1].medium, color: c.text.brand.assistive },
+  linkButton: { height: 24, justifyContent: 'center', paddingHorizontal: padding[12] },
+  linkText: { ...t.body[4].semiBold, color: c.action.default, textAlign: 'center' },
+  pressed: { opacity: 0.7 },
+  card: {
+    paddingHorizontal: padding[16],
+    paddingVertical: padding[20],
+    backgroundColor: c.surface.subtle,
+    borderRadius: radius.medium,
+    gap: gap[12],
+  },
+  divider: {
+    height: lineWeight.subtle,
+    backgroundColor: c.border.default,
+    borderRadius: radius.small,
+  },
+  rows: { gap: gap[12] },
+  tableHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tableHeaderText: { ...t.body[4].semiBold, color: c.text.default.neutral },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: gap[8],
+  },
+  lessonCols: { width: 97, flexDirection: 'row', justifyContent: 'space-between' },
+  textbook: { ...t.body[3].semiBold, color: c.text.default.strong, flexShrink: 1 },
+  startLesson: { ...t.body[3].medium, color: c.text.default.strong },
+  currentLesson: { ...t.body[3].bold, color: c.text.brand.assistive },
+  checkRow: { flexDirection: 'row', alignItems: 'center', gap: gap[8], alignSelf: 'flex-start' },
+  checkSlot: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  checkBox: {
+    width: 16,
+    height: 16,
+    borderRadius: radius.small,
+    borderWidth: lineWeight.regular,
+    borderColor: c.icon.disabled,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkBoxImage: { width: 16, height: 16 },
+  checkLabel: { ...t.body[5].medium, color: c.text.default.normal },
+  accordion: { backgroundColor: c.surface.subtle, borderRadius: radius.medium },
+  accordionHeader: {
+    height: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: padding[12],
+  },
+  accordionTitle: { ...t.body[3].semiBold, color: c.text.brand.assistive },
+  accordionBody: { padding: padding[12], gap: gap[12] },
+  accordionBlock: { gap: gap[4] },
+  accordionLabel: { ...t.body[4].semiBold, color: c.text.default.neutral },
+  memoHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  privateTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: gap[2],
+    padding: padding[4],
+    borderRadius: radius.small,
+    backgroundColor: c.surface.brand,
+  },
+  privateIcon: { width: 16, height: 16 },
+  privateText: { ...t.caption[1].medium, color: c.text.brand.assistive },
+  memoText: {
+    ...t.body[3].medium,
+    color: c.text.default.weak,
+    textDecorationLine: 'line-through',
+  },
+  softenedText: { ...t.body[3].medium, color: c.text.default.weak },
+  totalBlock: { gap: gap[16] },
+  totalLabel: { ...t.body[2].bold, color: c.text.default.strong },
+  totalValue: { ...t.body[1].bold, color: c.text.brand.assistive },
+  feeRowLabel: { ...t.body[4].semiBold, color: c.text.default.normal },
+  feeRowValue: {
+    ...t.body[4].medium,
+    color: c.text.default.neutral,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  cta: {
+    gap: gap[12],
+    paddingHorizontal: padding[24],
+    paddingVertical: padding[20],
+    backgroundColor: c.surface.input,
+  },
+  helpText: { ...t.caption[1].medium, color: c.text.default.weak, textAlign: 'center' },
+  // 초안 생성 중 코멘트 입력칸 자리 (Figma: textFiled/default/Large 스켈레톤)
+  commentSkeleton: {
+    height: 160,
+    backgroundColor: c.surface.disabled,
+    borderRadius: radius.large,
+  },
+  toastSlot: { height: 32, alignItems: 'center', justifyContent: 'center' },
+  toast: {
+    padding: padding[8],
+    backgroundColor: c.surface.default,
+    borderRadius: radius.full,
+    // Figma drop-shadow 1px 1px 6.8px blue/100
+    boxShadow: `1px 1px 6.8px ${primitive.blue[100]}`,
+  },
+  toastText: { ...t.caption[1].medium, color: c.text.brand.assistive, textAlign: 'center' },
+});
+
+/** 교육비 수정 시트 (Figma: T-14 교육비 수정 시트) */
+export const feeSheet = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(45, 48, 61, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  dismiss: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 },
+  sheet: {
+    width: '100%',
+    maxWidth: 390,
+    maxHeight: '92%',
+    backgroundColor: c.surface.subtle,
+    borderTopLeftRadius: radius.large,
+    borderTopRightRadius: radius.large,
+  },
+  scroll: { gap: gap[12] },
+  handleArea: { alignItems: 'center', paddingVertical: padding[12] },
+  handle: { width: 56, height: 4, borderRadius: radius.full, backgroundColor: c.border.default },
+  body: { paddingHorizontal: padding[24], gap: gap[12] },
+  texts: { gap: gap[8] },
+  title: { ...t.heading[1].bold, color: c.text.default.normal },
+  description: { ...t.body[4].semiBold, color: c.text.default.weak },
+  error: { ...t.caption[1].regular, color: c.text.feedback.warning },
+  cta: { gap: gap[12], paddingHorizontal: padding[24], paddingVertical: padding[20] },
+  toastSlot: detail.toastSlot,
+  toast: detail.toast,
+  toastText: detail.toastText,
 });
