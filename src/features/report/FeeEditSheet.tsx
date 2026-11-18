@@ -22,7 +22,12 @@ export function FeeEditSheet({ currentTotal, onClose, onSave, onSaved }: Props) 
   const [amount, setAmount] = useState(String(currentTotal));
   const submit = useSubmission();
   const insets = useSafeAreaInsets();
-  const canSave = reason.trim().length > 0 && Number(amount) > 0;
+  const canSave =
+    reason.trim().length > 0 &&
+    reason.length <= 200 &&
+    amount !== '' &&
+    Number(amount) >= 0 &&
+    Number(amount) <= 10000000;
 
   const save = () => {
     if (!canSave || submit.pending) return;
@@ -70,6 +75,7 @@ export function FeeEditSheet({ currentTotal, onClose, onSave, onSaved }: Props) 
               <TextField
                 label="사유"
                 value={reason}
+                maxLength={200}
                 onChangeText={setReason}
                 placeholder="예: 교재비 15,000원 추가"
                 editable={!submit.pending}
@@ -89,13 +95,6 @@ export function FeeEditSheet({ currentTotal, onClose, onSave, onSaved }: Props) 
               )}
             </View>
             <View style={s.cta}>
-              {submit.pending && (
-                <View style={s.toastSlot}>
-                  <View role="status" accessibilityLiveRegion="polite" style={s.toast}>
-                    <Text style={s.toastText}>교육비를 바꿨어요 · 사유와 함께 저장</Text>
-                  </View>
-                </View>
-              )}
               <ActionButton
                 label={submit.error ? '다시 저장' : '저장'}
                 disabled={!canSave}

@@ -1,12 +1,12 @@
 /** created: 리포트 생성됨, sent: 학부모에게 발송 완료 */
-export type ReportStatus = 'created' | 'sent';
+export type ReportStatus = 'created' | 'sent' | 'scheduled' | 'failed';
 
-/** API 미확정: 화면 데이터 모델입니다. 날짜는 ISO 문자열(YYYY-MM-DD, 열람 일시는 ISO datetime)로 받습니다. */
+/** API 응답을 화면에서 사용할 형식으로 변환한 모델입니다. */
 export type ReportItem = {
   id: string;
   studentName: string;
   /** 정산 월 (1~12) */
-  settlementMonth: number;
+  settlementMonth: string;
   periodStart: string;
   periodEnd: string;
   status: ReportStatus;
@@ -17,7 +17,7 @@ export type ReportItem = {
 export type ReportData = {
   reports: ReportItem[];
   /** 첫 정산이 만들어지는 수업 회차 (빈 상태 안내 문구의 N) */
-  firstSettlementSession: number;
+  firstSettlementSession?: number;
 };
 
 export type ReportState =
@@ -29,6 +29,8 @@ export type ReportState =
 export const reportStatusLabel: Record<ReportStatus, string> = {
   created: '생성됨',
   sent: '발송 완료',
+  scheduled: '발송 예약',
+  failed: '발송 실패',
 };
 
 function parseDate(value: string) {
@@ -53,7 +55,7 @@ export function formatReadAt(value: string) {
 /** 이해도 평균 */
 export type Understanding = '상' | '중' | '하';
 
-/** API 미확정: 정산 리포트 상세 화면 데이터 모델입니다. 금액은 원 단위 정수입니다. */
+/** 서버의 상세·코멘트·교육비 응답을 합친 화면 모델입니다. */
 export type ReportDetail = {
   id: string;
   studentName: string;
@@ -73,17 +75,15 @@ export type ReportDetail = {
     totalSessions: number;
     cancelledSessions: number;
     /** 숙제 수행률 (0~100) */
-    homeworkRate: number;
-    understanding: Understanding;
+    homeworkRate: number | null;
+    understanding: Understanding | null;
   };
-  progress: { textbook: string; startLesson: number; currentLesson: number }[];
+  progress: { textbook: string; startLesson: string; currentLesson: string }[];
   comment: {
     /** AI가 만든 선생님 코멘트 초안 */
     draft: string;
-    /** 선생님이 적은 원래 기록 메모. 학부모에게는 보이지 않습니다. */
-    teacherMemo: string;
-    /** 기록 메모를 AI가 부드럽게 다듬은 초안 문장 */
-    softened: string;
+    source?: string;
+    reviewed?: boolean;
   };
   fee: {
     total: number;

@@ -1,7 +1,12 @@
+import type { ApiParentResponse } from '@/apis/models';
 export type IncomeInvoice = {
   id: string;
   studentName: string;
-  sessionCount: number;
+  sessionCount?: number;
+  invoiceName?: string;
+  parents?: ApiParentResponse[];
+  canceled?: boolean;
+  statusLine?: string;
   billedAmount: number;
   receivedAmount: number;
   parentReportedAt?: string;
@@ -9,7 +14,7 @@ export type IncomeInvoice = {
   /** 선생님이 카톡으로 입금 안내를 다시 보냈는지 */
   noticeResent?: boolean;
 };
-/** API 미확정: 화면 데이터 모델입니다. summary는 목록과 독립적인 집계 응답을 받을 수 있게 구분합니다. */
+/** 서버가 계산한 월 합계를 그대로 표시합니다. 목록에서 다시 합산하지 않습니다. */
 export type IncomeData = {
   summary: { expectedAmount: number; receivedAmount: number; outstandingAmount: number };
   invoices: IncomeInvoice[];

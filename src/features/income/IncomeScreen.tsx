@@ -14,17 +14,19 @@ const TOAST_MS = 3000;
 const PAID_TOAST = '입금 완료 · 학부모 링크에도 입금 확인으로 표시돼요';
 
 function InvoiceCard({ invoice, onPress }: { invoice: IncomeInvoice; onPress: () => void }) {
-  const status = paymentStatus(invoice);
-  const paid = status === '입금 완료';
-  const note = paid
-    ? undefined
-    : invoice.noticeResent
-      ? '학부모님께 카톡으로 입금 안내를 다시 보냈어요'
-      : invoice.receivedAmount > 0
-        ? `받은 금액 ${won(invoice.receivedAmount)}`
-        : invoice.parentReportedAt
-          ? `학부모님이 [입금했어요]를 눌렀어요 · ${invoice.parentReportedAt}`
-          : invoice.reminderText;
+  const status = invoice.canceled ? '취소됨' : paymentStatus(invoice);
+  const paid = invoice.canceled || status === '입금 완료';
+  const note =
+    invoice.statusLine ??
+    (paid
+      ? undefined
+      : invoice.noticeResent
+        ? '학부모님께 카톡으로 입금 안내를 다시 보냈어요'
+        : invoice.receivedAmount > 0
+          ? `받은 금액 ${won(invoice.receivedAmount)}`
+          : invoice.parentReportedAt
+            ? `학부모님이 [입금했어요]를 눌렀어요 · ${invoice.parentReportedAt}`
+            : invoice.reminderText);
   return (
     <Pressable
       role="button"
@@ -41,7 +43,10 @@ function InvoiceCard({ invoice, onPress }: { invoice: IncomeInvoice; onPress: ()
         </View>
       </View>
       <View style={s.bill}>
-        <Text style={s.sessions}>다음 {invoice.sessionCount}회차</Text>
+        <Text style={s.sessions}>
+          {invoice.invoiceName ??
+            (invoice.sessionCount ? `다음 ${invoice.sessionCount}회차` : '교육비')}
+        </Text>
         <Text style={s.billAmount}>{won(invoice.billedAmount)}</Text>
       </View>
       {note && (
@@ -52,10 +57,17 @@ function InvoiceCard({ invoice, onPress }: { invoice: IncomeInvoice; onPress: ()
     </Pressable>
   );
 }
-export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?: () => void }) {
-  // API 연동 전: 시트에서 확인한 받은 금액을 화면에만 반영합니다.
-  const [received, setReceived] = useState<Record<string, number>>({});
-  const [resent, setResent] = useState<Record<string, true>>({});
+export function IncomeScreen({
+  state,
+  onRetry,
+  onConfirmPayment,
+  onResend,
+}: {
+  state: IncomeState;
+  onRetry?: () => void;
+  onConfirmPayment?: (id: string, amount?: number) => Promise<void>;
+  onResend?: (id: string, participantId: number) => Promise<void>;
+}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -65,37 +77,9 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const invoices =
-    state.status === 'ready'
-      ? state.data.invoices.map((invoice) => ({
-          ...invoice,
-          receivedAmount: received[invoice.id] ?? invoice.receivedAmount,
-          noticeResent: resent[invoice.id] ?? invoice.noticeResent,
-        }))
-      : [];
-  const summary =
-    state.status === 'ready'
-      ? (() => {
-          const delta = state.data.invoices.reduce(
-            (sum, invoice) =>
-              invoice.id in received ? sum + received[invoice.id] - invoice.receivedAmount : sum,
-            0,
-          );
-          const { expectedAmount, receivedAmount, outstandingAmount } = state.data.summary;
-          return {
-            expectedAmount,
-            receivedAmount: receivedAmount + delta,
-            outstandingAmount: Math.max(0, outstandingAmount - delta),
-          };
-        })()
-      : null;
+  const invoices = state.status === 'ready' ? state.data.invoices : [];
+  const summary = state.status === 'ready' ? state.data.summary : null;
   const selected = invoices.find((invoice) => invoice.id === selectedId);
-
-  const record = (id: string, amount: number) => {
-    setReceived((prev) => ({ ...prev, [id]: amount }));
-    setSelectedId(null);
-  };
-
   return (
     <SafeAreaView edges={['top']} style={s.safe}>
       <View style={s.phone}>
@@ -193,16 +177,23 @@ export function IncomeScreen({ state, onRetry }: { state: IncomeState; onRetry?:
         <PaymentSheet
           invoice={selected}
           onClose={() => setSelectedId(null)}
-          onPaidInFull={() => {
-            record(selected.id, selected.billedAmount);
-            setToast(PAID_TOAST);
+          onPartialPayment={async (amount) => {
+            if (!onConfirmPayment) throw new Error('입금 확인을 연결하지 못했어요.');
+            await onConfirmPayment(selected.id, amount);
+            setSelectedId(null);
+            setToast('일부 입금을 확인했어요.');
           }}
-          onResend={(amount) => {
-            // TODO: 카톡 공유 연동 전이라 받은 금액만 반영하고 전송 완료 토스트를 보여 줍니다.
-            // TODO: 보호자 호칭은 API 데이터 확정 후 교체합니다. (Figma: 'OOO 어머님')
-            record(selected.id, Math.min(amount, selected.billedAmount));
-            setResent((prev) => ({ ...prev, [selected.id]: true }));
-            setToast(`${selected.studentName} 어머님께 카톡을 보냈어요`);
+          onResend={async (participantId) => {
+            if (!onResend) throw new Error('입금 안내 공유를 연결하지 못했어요.');
+            await onResend(selected.id, participantId);
+            setSelectedId(null);
+            setToast('입금 안내 공유 창을 열었어요.');
+          }}
+          onPaidInFull={async () => {
+            if (!onConfirmPayment) throw new Error('입금 확인을 연결하지 못했어요.');
+            await onConfirmPayment(selected.id);
+            setSelectedId(null);
+            setToast(PAID_TOAST);
           }}
         />
       )}

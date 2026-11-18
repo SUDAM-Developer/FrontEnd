@@ -1,92 +1,104 @@
 import arrowBackImage from '../../../assets/images/arrow_back.svg';
-import arrowDownImage from '../../../assets/images/arrow_down_24.svg';
-import arrowUpImage from '../../../assets/images/arrow_up_24.svg';
 import checkboxCheckedImage from '../../../assets/images/checkbox-checked.svg';
-import lockImage from '../../../assets/images/lock.svg';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Keyboard, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { TextInput } from '@/components/TextInput';
+import { apiMessage } from '@/hooks/useApiResource';
 import { FeeEditSheet } from './FeeEditSheet';
 import { ReportStatusTag } from './ReportCard';
 import { detail as s } from './styles';
 import { formatDateTime, formatPeriod, formatWon } from './types';
 import type { FeeEdit, ReportDetail } from './types';
-
-/** 토스트를 보여 주는 시간 */
-const TOAST_MS = 3000;
-/**
- * 웹에서는 입력칸에 포커스가 있을 때 링크를 누르면 누르기 전에 blur가 먼저 일어나
- * 링크가 "수정 완료"에서 다른 동작으로 바뀝니다. blur 직후의 누름은 "수정 완료"로 봅니다.
- */
-const BLUR_PRESS_GRACE_MS = 400;
+import type { ApiParentResponse, ApiReportCommentResponse } from '@/apis/models';
 
 export type ReportDetailScreenProps = {
   report: ReportDetail;
   onBack: () => void;
-  /** 카톡으로 보내기. 보낼 코멘트를 함께 넘깁니다. */
-  onSend: (comment: string) => void;
-  /** 교육비 수정 저장. 없으면 "수정"을 누를 수 없습니다. */
+  onSend: (comment: string, participantId?: number) => Promise<void> | void;
+  onSaveComment?: (comment: string) => Promise<ApiReportCommentResponse>;
   onSaveFee?: (edit: FeeEdit, signal: AbortSignal) => Promise<void>;
+  parents?: ApiParentResponse[];
 };
-
-/** T-14 정산 리포트 상세. 발송 완료 리포트는 읽기 전용으로 보여 줍니다. */
-export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: ReportDetailScreenProps) {
+export function ReportDetailScreen({
+  report,
+  onBack,
+  onSend,
+  onSaveComment,
+  onSaveFee,
+  parents = [],
+}: ReportDetailScreenProps) {
   const readOnly = report.status === 'sent';
   const [comment, setComment] = useState(report.comment.draft);
-  const [editing, setEditing] = useState(false);
-  const [checked, setChecked] = useState(false);
-  const [softenedOpen, setSoftenedOpen] = useState(false);
-  // 한 번이라도 "수정 완료"를 눌렀으면 링크가 "다시 고치기"로 바뀝니다.
-  const [edited, setEdited] = useState(false);
-  const [feeTotal, setFeeTotal] = useState(report.fee.total);
+  const [source, setSource] = useState(report.comment.source);
+  const [checked, setChecked] = useState(report.comment.reviewed ?? false);
+  const [savedComment, setSavedComment] = useState(report.comment.draft);
+  const [pending, setPending] = useState(false);
   const [feeSheetOpen, setFeeSheetOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const blurredAt = useRef(0);
-  const { stats } = report;
-  const fee = { ...report.fee, total: feeTotal };
-  const canSend = checked && comment.trim().length > 0;
-
+  const [notice, setNotice] = useState<string | null>(null);
+  const [recipient, setRecipient] = useState<number | undefined>(
+    parents.length === 1 ? parents[0].participantId : undefined,
+  );
+  const locked = useRef(false);
+  const mounted = useRef(true);
   useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), TOAST_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
-  const toggleChecked = () => {
-    const next = !checked;
-    setChecked(next);
-    setToast(next ? '코멘트를 확인했어요' : null);
-  };
-
-  /**
-   * 코멘트는 링크로만 고칩니다.
-   * "초안 다시 만들기" → 입력칸이 열리고 → "수정 완료" → 이후에는 "다시 고치기"로 다시 열 수 있습니다.
-   */
-  const commentLink = editing
-    ? { label: '수정 완료', action: () => Keyboard.dismiss() }
-    : {
-        label: edited ? '다시 고치기' : '초안 다시 만들기',
-        action: () => {
-          // "수정 완료"를 누를 때 생긴 blur 직후라면 입력칸을 다시 열지 않습니다.
-          if (Date.now() - blurredAt.current < BLUR_PRESS_GRACE_MS) return;
-          setEditing(true);
-        },
-      };
-
-  const helpText = !checked
-    ? 'AI 코멘트를 한 번 확인해야 보낼 수 있어요.'
-    : '카카오톡 공유 창에서 학부모님을 고르면 보내져요';
-
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const validComment = comment.trim().length > 0 && comment.length <= 1000;
+  const fee = report.fee;
+  async function confirmComment() {
+    if (locked.current || !validComment) return;
+    locked.current = true;
+    setPending(true);
+    setNotice(null);
+    try {
+      if (!onSaveComment) throw new Error('코멘트 저장을 연결하지 못했어요.');
+      const result = await onSaveComment(comment);
+      if (!mounted.current) return;
+      setComment(result.comment);
+      setSavedComment(result.comment);
+      setChecked(result.reviewed);
+      setSource(result.commentSource);
+      setNotice(result.reviewed ? '코멘트를 확인했어요' : '코멘트를 저장했어요.');
+    } catch (error) {
+      if (mounted.current) setNotice(apiMessage(error));
+    } finally {
+      locked.current = false;
+      if (mounted.current) setPending(false);
+    }
+  }
+  async function send() {
+    if (locked.current || !checked || comment !== savedComment || !validComment) return;
+    locked.current = true;
+    setPending(true);
+    setNotice(null);
+    try {
+      await onSend(comment, recipient);
+    } catch (error) {
+      if (mounted.current) setNotice(apiMessage(error));
+    } finally {
+      locked.current = false;
+      if (mounted.current) setPending(false);
+    }
+  }
   return (
     <View style={s.page}>
       <SafeAreaView edges={['top', 'bottom']} style={s.safe}>
         <View style={s.phone}>
           <View style={s.navBar}>
-            <Pressable role="button" accessibilityLabel="뒤로 가기" onPress={onBack} hitSlop={8}>
+            <Pressable
+              role="button"
+              accessibilityLabel="뒤로 가기"
+              onPress={onBack}
+              disabled={pending}
+              hitSlop={8}
+            >
               <Image source={arrowBackImage} style={s.icon} />
             </Pressable>
             <Text role="heading" style={s.navTitle}>
@@ -94,11 +106,10 @@ export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: Report
             </Text>
             <View style={s.icon} />
           </View>
-
           <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
             <View>
               <View style={s.summary}>
-                {readOnly && <ReportStatusTag status={report.status} style={s.detailStatusTag} />}
+                <ReportStatusTag status={report.status} style={s.detailStatusTag} />
                 <View style={s.summaryTexts}>
                   <Text role="heading" style={s.title}>
                     {report.sessionCount}회차 수업을 마쳤어요
@@ -112,17 +123,20 @@ export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: Report
                 </View>
               </View>
               <View style={s.stats}>
-                <Stat label="수업" value={`${stats.completedSessions}/${stats.totalSessions}`} />
-                <Stat label="휴강" value={String(stats.cancelledSessions)} />
-                <Stat label="숙제 수행" value={`${stats.homeworkRate}%`} />
-                <Stat label="이해도 · 평균" value={stats.understanding} />
+                <Stat
+                  label="수업"
+                  value={`${report.stats.completedSessions}/${report.stats.totalSessions}`}
+                />
+                <Stat label="휴강" value={String(report.stats.cancelledSessions)} />
+                <Stat
+                  label="숙제 수행"
+                  value={report.stats.homeworkRate == null ? '-' : `${report.stats.homeworkRate}%`}
+                />
+                <Stat label="이해도 · 평균" value={report.stats.understanding ?? '-'} />
               </View>
             </View>
-
             <View style={s.section}>
-              <View style={s.progressLabel}>
-                <Text style={s.sectionLabel}>진도</Text>
-              </View>
+              <Text style={s.sectionLabel}>진도</Text>
               <View style={s.card}>
                 <View style={s.tableHeader}>
                   <Text style={s.tableHeaderText}>교재</Text>
@@ -133,63 +147,63 @@ export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: Report
                 </View>
                 <View style={s.divider} />
                 <View style={s.rows}>
-                  {report.progress.map((item, i) => (
-                    <Fragment key={item.textbook}>
-                      {i > 0 && <View style={s.divider} />}
-                      <View style={s.tableRow}>
-                        <Text style={s.textbook}>{item.textbook}</Text>
-                        <View style={s.lessonCols}>
-                          <Text style={s.startLesson}>{item.startLesson}강</Text>
-                          <Text style={s.currentLesson}>{item.currentLesson}강</Text>
+                  {report.progress.length === 0 ? (
+                    <Text>기록된 진도가 없어요.</Text>
+                  ) : (
+                    report.progress.map((item, i) => (
+                      <Fragment key={`${item.textbook}-${i}`}>
+                        {i > 0 && <View style={s.divider} />}
+                        <View style={s.tableRow}>
+                          <Text style={s.textbook}>{item.textbook}</Text>
+                          <View style={s.lessonCols}>
+                            <Text style={s.startLesson}>{item.startLesson}</Text>
+                            <Text style={s.currentLesson}>{item.currentLesson}</Text>
+                          </View>
                         </View>
-                      </View>
-                    </Fragment>
-                  ))}
+                      </Fragment>
+                    ))
+                  )}
                 </View>
               </View>
             </View>
-
             <View style={s.section}>
-              <View>
-                <View style={s.sectionHeader}>
-                  <View style={s.commentLabel}>
-                    <Text style={s.sectionLabel}>선생님 코멘트</Text>
-                    {!readOnly && (
-                      <View style={s.aiTag}>
-                        <Text style={s.aiTagText}>AI 초안</Text>
-                      </View>
-                    )}
-                  </View>
-                  {!readOnly && (
-                    <LinkButton label={commentLink.label} onPress={commentLink.action} />
+              <View style={s.sectionHeader}>
+                <View style={s.commentLabel}>
+                  <Text style={s.sectionLabel}>선생님 코멘트</Text>
+                  {source === 'AI_DRAFT' && (
+                    <View style={s.aiTag}>
+                      <Text style={s.aiTagText}>AI 초안</Text>
+                    </View>
                   )}
                 </View>
-                <TextInput
-                  // 편집을 시작하면 새로 그려서 바로 포커스(키보드)를 줍니다.
-                  key={editing ? 'editing' : 'view'}
-                  autoFocus={editing}
-                  accessibilityLabel="선생님 코멘트"
-                  value={readOnly ? report.comment.draft : comment}
-                  onChangeText={setComment}
-                  editable={!readOnly && editing}
-                  onBlur={() => {
-                    if (!editing) return;
-                    blurredAt.current = Date.now();
-                    setEditing(false);
-                    setEdited(true);
-                  }}
-                  multiline
-                  scrollEnabled={false}
-                  textAlignVertical="top"
-                />
               </View>
+              <TextInput
+                accessibilityLabel="선생님 코멘트"
+                value={comment}
+                onChangeText={(value) => {
+                  setComment(value);
+                  setChecked(false);
+                  setNotice(null);
+                }}
+                editable={!readOnly && !pending}
+                multiline
+                scrollEnabled={false}
+                textAlignVertical="top"
+                errorMessage={
+                  comment.length > 1000 ? '코멘트는 1,000자 이내로 입력해 주세요.' : undefined
+                }
+              />
               {!readOnly && (
                 <Pressable
                   role="checkbox"
-                  aria-checked={checked}
-                  accessibilityState={{ checked }}
                   accessibilityLabel="코멘트를 확인했어요"
-                  onPress={toggleChecked}
+                  accessibilityState={{ checked, disabled: pending || !validComment }}
+                  aria-checked={checked}
+                  disabled={pending || !validComment}
+                  onPress={() => {
+                    if (checked) setChecked(false);
+                    else void confirmComment();
+                  }}
                   hitSlop={8}
                   style={s.checkRow}
                 >
@@ -203,53 +217,15 @@ export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: Report
                   <Text style={s.checkLabel}>코멘트를 확인했어요</Text>
                 </Pressable>
               )}
-              <View style={s.divider} />
-              <View style={s.accordion}>
-                <Pressable
-                  role="button"
-                  aria-expanded={softenedOpen}
-                  accessibilityState={{ expanded: softenedOpen }}
-                  onPress={() => setSoftenedOpen((v) => !v)}
-                  style={s.accordionHeader}
-                >
-                  <Text style={s.accordionTitle}>
-                    AI가 부드럽게 만든 문장 {softenedOpen ? '접기' : '보기'}
-                  </Text>
-                  <Image
-                    source={softenedOpen ? arrowUpImage : arrowDownImage}
-                    style={s.icon}
-                    aria-hidden
-                  />
-                </Pressable>
-                {softenedOpen && (
-                  <View style={s.accordionBody}>
-                    <View style={s.accordionBlock}>
-                      <View style={s.memoHeader}>
-                        <Text style={s.accordionLabel}>선생님 기록 메모</Text>
-                        <View style={s.privateTag}>
-                          <Image source={lockImage} style={s.privateIcon} aria-hidden />
-                          <Text style={s.privateText}>학부모 비공개</Text>
-                        </View>
-                      </View>
-                      <Text style={s.memoText}>{report.comment.teacherMemo}</Text>
-                    </View>
-                    <View style={s.divider} />
-                    <View style={s.accordionBlock}>
-                      <Text style={s.accordionLabel}>초안 문장</Text>
-                      <Text style={s.softenedText}>{report.comment.softened}</Text>
-                    </View>
-                  </View>
-                )}
-              </View>
             </View>
-
             <View>
               <View style={s.sectionHeader}>
-                <View style={s.feeLabel}>
-                  <Text style={s.sectionLabel}>교육비 안내</Text>
-                </View>
+                <Text style={s.sectionLabel}>교육비 안내</Text>
                 {!readOnly && (
-                  <LinkButton label="수정" onPress={onSaveFee && (() => setFeeSheetOpen(true))} />
+                  <LinkButton
+                    label="수정"
+                    onPress={!pending && onSaveFee ? () => setFeeSheetOpen(true) : undefined}
+                  />
                 )}
               </View>
               <InfoCard
@@ -265,50 +241,65 @@ export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: Report
                 ]}
               />
             </View>
-
             {readOnly && (
               <InfoCard
                 rows={[
                   ['발송', report.sentAt ? formatDateTime(report.sentAt) : '-'],
-                  [
-                    '학부모 열람',
-                    report.parentReadAt ? formatDateTime(report.parentReadAt) : '안읽음',
-                  ],
+                  ['학부모 열람', report.parentReadAt ? formatDateTime(report.parentReadAt) : '-'],
                 ]}
               />
             )}
           </ScrollView>
-
           {!readOnly && (
             <View style={s.cta}>
-              {toast ? (
-                <View style={s.toastSlot}>
-                  <View role="status" accessibilityLiveRegion="polite" style={s.toast}>
-                    <Text style={s.toastText}>{toast}</Text>
-                  </View>
+              {parents.length > 1 && (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {parents.map((parent) => (
+                    <Pressable
+                      key={parent.participantId}
+                      role="radio"
+                      accessibilityState={{ selected: recipient === parent.participantId }}
+                      onPress={() => setRecipient(parent.participantId)}
+                      disabled={pending}
+                    >
+                      <Text
+                        style={{
+                          color: recipient === parent.participantId ? '#0070EF' : '#848A91',
+                        }}
+                      >
+                        {parent.label === 'MOTHER'
+                          ? '어머니'
+                          : parent.label === 'FATHER'
+                            ? '아버지'
+                            : '보호자'}
+                      </Text>
+                    </Pressable>
+                  ))}
                 </View>
-              ) : (
-                <Text style={s.helpText}>{helpText}</Text>
               )}
+              <Text role={notice ? 'status' : undefined} style={s.helpText}>
+                {notice ??
+                  (checked
+                    ? '카카오톡 공유 창에서 학부모님을 선택해 주세요.'
+                    : '코멘트를 확인해야 보낼 수 있어요.')}
+              </Text>
               <ActionButton
                 label="카톡으로 보내기"
-                // Figma는 확인 전·초안 생성 중에도 기본 파란 버튼이라, 모양은 유지하고 누를 때만 막습니다.
-                onPress={() => {
-                  if (canSend) onSend(comment.trim());
-                }}
+                loading={pending}
+                disabled={!checked || !validComment || (parents.length > 1 && !recipient)}
+                onPress={() => void send()}
               />
             </View>
           )}
         </View>
         {feeSheetOpen && onSaveFee && (
           <FeeEditSheet
-            currentTotal={feeTotal}
+            currentTotal={report.fee.total}
             onClose={() => setFeeSheetOpen(false)}
             onSave={onSaveFee}
-            onSaved={(edit) => {
-              setFeeTotal(edit.total);
+            onSaved={() => {
               setFeeSheetOpen(false);
-              setToast('교육비를 바꿨어요 · 사유와 함께 저장');
+              setNotice('교육비를 저장했어요.');
             }}
           />
         )}
@@ -316,7 +307,6 @@ export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: Report
     </View>
   );
 }
-
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View style={s.stat} accessible accessibilityLabel={`${label} ${value}`}>

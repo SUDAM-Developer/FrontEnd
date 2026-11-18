@@ -1,41 +1,67 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TextInput } from '@/components/TextInput';
 import { ActionButton } from '@/components/ActionButton';
-import { TextField } from '@/features/tutoring/FormFields';
-import { formatWonInput, nextWonDigits } from '@/utils/won';
 import { sheet as s } from './styles';
+import { apiMessage } from '@/hooks/useApiResource';
 import { won } from './types';
 import type { IncomeInvoice } from './types';
-
 type Props = {
   invoice: IncomeInvoice;
   onClose: () => void;
-  /** 전액 입금 완료 */
-  onPaidInFull: () => void;
-  /** 받은 금액을 저장하고 입금 안내를 다시 보냅니다. (카톡 연동 전) */
-  onResend: (receivedAmount: number) => void;
+  onPaidInFull: () => Promise<void>;
+  onPartialPayment: (amount: number) => Promise<void>;
+  onResend: (participantId: number) => Promise<void>;
 };
-
-/** T-15 입금 확인 시트 */
-export function PaymentSheet({ invoice, onClose, onPaidInFull, onResend }: Props) {
+/** 부분 입금·재전송은 서로 다른 작업이므로 전액 확인과 구분합니다. */
+export function PaymentSheet({
+  invoice,
+  onClose,
+  onPaidInFull,
+  onPartialPayment,
+  onResend,
+}: Props) {
   const [amount, setAmount] = useState('');
+  const parents = invoice.parents ?? [];
+  const [recipient, setRecipient] = useState<number | undefined>(
+    parents.length === 1 ? parents[0].participantId : undefined,
+  );
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const locked = useRef(false);
   const insets = useSafeAreaInsets();
-  const title = `${invoice.studentName} ∙ 다음 ${invoice.sessionCount}회차 입금 확인`;
-
+  async function confirm(action: () => Promise<void>) {
+    if (locked.current) return;
+    locked.current = true;
+    setPending(true);
+    setError(null);
+    try {
+      await action();
+    } catch (e) {
+      setError(apiMessage(e));
+    } finally {
+      locked.current = false;
+      setPending(false);
+    }
+  }
+  const close = () => {
+    if (!locked.current) onClose();
+  };
   return (
-    <Modal transparent animationType="slide" visible onRequestClose={onClose}>
+    <Modal transparent animationType="slide" visible onRequestClose={close}>
       <View style={s.backdrop}>
         <Pressable
           role="button"
           accessibilityLabel="입금 확인 닫기"
-          onPress={onClose}
+          onPress={close}
+          disabled={pending}
           style={s.dismiss}
         />
         <View
           role="dialog"
           accessibilityViewIsModal
-          accessibilityLabel={title}
+          accessibilityLabel="입금 확인"
           style={[s.sheet, { paddingBottom: insets.bottom }]}
         >
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.scroll}>
@@ -43,39 +69,76 @@ export function PaymentSheet({ invoice, onClose, onPaidInFull, onResend }: Props
               <View style={s.handle} />
             </View>
             <View style={s.body}>
-              <View style={s.texts}>
-                <Text role="heading" style={s.title}>
-                  {title}
-                </Text>
-                <Text style={s.description}>청구 {won(invoice.billedAmount)}</Text>
-              </View>
-              <TextField
-                label="미입금액 입력"
-                required={false}
-                value={formatWonInput(amount)}
-                onChangeText={(text) => {
-                  const next = nextWonDigits(amount, text);
-                  // 청구 금액보다 큰 받은 금액은 입력되지 않게 막습니다.
-                  if (Number(next) <= invoice.billedAmount) setAmount(next);
-                }}
-                placeholder="금액을 알려주세요"
-                keyboardType="number-pad"
+              <Text role="heading" style={s.title}>
+                {invoice.studentName} · 입금 확인
+              </Text>
+              <Text style={s.description}>
+                청구 {won(invoice.billedAmount)} · 받은 금액 {won(invoice.receivedAmount)}
+              </Text>
+              <Text>
+                남은 금액 {won(Math.max(0, invoice.billedAmount - invoice.receivedAmount))}
+              </Text>
+              <Text>이번에 확인한 추가 입금액</Text>
+              <TextInput
+                accessibilityLabel="추가 입금액"
+                value={amount}
+                onChangeText={(value) => setAmount(value.replace(/[^0-9]/g, ''))}
+                editable={!pending}
                 inputMode="numeric"
+                keyboardType="number-pad"
+                placeholder="일부 입금일 때만 입력해 주세요"
               />
+              {parents.length > 1 && (
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  {parents.map((parent) => (
+                    <Pressable
+                      key={parent.participantId}
+                      role="radio"
+                      accessibilityLabel={parent.label}
+                      accessibilityState={{ selected: recipient === parent.participantId }}
+                      disabled={pending}
+                      onPress={() => setRecipient(parent.participantId)}
+                    >
+                      <Text>
+                        {parent.label === 'MOTHER'
+                          ? '어머니'
+                          : parent.label === 'FATHER'
+                            ? '아버지'
+                            : '보호자'}
+                        {recipient === parent.participantId ? ' ✓' : ''}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+              {error && <Text role="alert">{error}</Text>}
             </View>
             <View style={s.cta}>
               <ActionButton
                 label="전액 입금 완료"
-                // 받은 금액을 입력하면 일부 입금이라 전액 완료는 누를 수 없게 합니다.
-                disabled={Number(amount) > 0}
-                onPress={onPaidInFull}
+                loading={pending}
+                disabled={amount.length > 0}
+                onPress={() => void confirm(onPaidInFull)}
+              />
+              <ActionButton
+                label="일부 입금 확인"
+                variant="secondary"
+                loading={pending}
+                disabled={
+                  !(
+                    Number(amount) > 0 &&
+                    Number(amount) < invoice.billedAmount - invoice.receivedAmount
+                  )
+                }
+                onPress={() => void confirm(() => onPartialPayment(Number(amount)))}
               />
               <ActionButton
                 label="카톡으로 입금 안내 재전송"
                 variant="secondary"
-                // Figma는 빈 입력에서도 같은 모양이라, 모양은 유지하고 금액이 있을 때만 보냅니다.
+                loading={pending}
+                disabled={!recipient || amount.length > 0}
                 onPress={() => {
-                  if (Number(amount) > 0) onResend(Number(amount));
+                  if (recipient) void confirm(() => onResend(recipient));
                 }}
               />
             </View>

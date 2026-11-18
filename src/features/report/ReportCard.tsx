@@ -14,7 +14,7 @@ export function ReportStatusTag({
   status: ReportStatus;
   style?: StyleProp<ViewStyle>;
 }) {
-  const created = status === 'created';
+  const created = status !== 'sent';
   return (
     <View style={[s.statusTag, created ? s.statusCreated : s.statusSent, style]}>
       <Image source={created ? createdIcon : sentIcon} style={s.statusIcon} aria-hidden />
@@ -38,7 +38,7 @@ export function ReportCard({ report, onPress }: { report: ReportItem; onPress?: 
       role={onPress ? 'button' : undefined}
       accessibilityLabel={[
         report.studentName,
-        `${report.settlementMonth}월 정산`,
+        report.settlementMonth,
         period,
         reportStatusLabel[report.status],
         readAt,
@@ -51,7 +51,7 @@ export function ReportCard({ report, onPress }: { report: ReportItem; onPress?: 
         <View style={s.cardInfo}>
           <Text style={s.student}>{report.studentName}</Text>
           <View style={s.period}>
-            <Text style={s.periodText}>{report.settlementMonth}월 정산</Text>
+            <Text style={s.periodText}>{report.settlementMonth}</Text>
             <Text style={s.periodText}>{period}</Text>
           </View>
         </View>

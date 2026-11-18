@@ -1,29 +1,49 @@
-import { CAN_PREVIEW } from '@/config/review';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ReportDetailScreen } from '@/features/report/ReportDetailScreen';
-import { previewReportDetailFor } from '@/features/report/previewData';
-
-// TODO: 교육비 수정 API가 생기면 실제 요청으로 바꿉니다. 지금은 저장 중 상태만 잠깐 보여 줍니다.
-const SAVE_FEE_PREVIEW_MS = 1500;
-const previewSaveFee = () =>
-  new Promise<void>((resolve) => setTimeout(resolve, SAVE_FEE_PREVIEW_MS));
-
+import { invoiceFee, loadReportDetail } from '@/features/report/apiData';
+import { useApiResource } from '@/hooks/useApiResource';
+import { ApiState } from '@/components/ApiState';
+import { saveReportComment, confirmReportSend } from '@/apis/reports';
+import { adjustInvoice } from '@/apis/billing';
+import { createShare } from '@/apis/shares';
+import { prepareKakaoShare, openKakaoShare } from '@/utils/kakaoShare';
+import type { ReportDetail } from '@/features/report/types';
 const back = () => {
   if (router.canGoBack()) router.back();
   else router.replace('/reports');
 };
-
-// TODO: 리포트 상세 API가 생기면 id로 불러옵니다. 지금은 미리보기 데이터만 보여 줍니다.
 export default function ReportDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  if (!CAN_PREVIEW) return <Redirect href="/reports" />;
+  const load = useCallback((signal: AbortSignal) => loadReportDetail(id, signal), [id]);
+  const { state, retry } = useApiResource(load);
+  const [fee, setFee] = useState<{ reportId: string; value: ReportDetail['fee'] } | null>(null);
+  if (state.status !== 'ready')
+    return (
+      <ApiState
+        message={state.status === 'error' ? state.message : undefined}
+        onRetry={state.status === 'error' ? retry : undefined}
+      />
+    );
   return (
     <ReportDetailScreen
-      report={previewReportDetailFor(id)}
+      key={id}
+      report={{ ...state.data.data, fee: fee?.reportId === id ? fee.value : state.data.data.fee }}
       onBack={back}
-      // TODO: 카카오톡 공유 연동 전까지는 목록으로 돌아갑니다.
-      onSend={back}
-      onSaveFee={previewSaveFee}
+      parents={state.data.parents}
+      onSaveComment={(text) => saveReportComment(id, text)}
+      onSaveFee={async (edit, signal) => {
+        const invoice = await adjustInvoice(state.data.invoiceId, edit.total, edit.reason, signal);
+        setFee({ reportId: id, value: invoiceFee(invoice) });
+      }}
+      onSend={async (_comment, participantId) => {
+        if (!participantId) throw new Error('공유할 학부모가 연결되어 있지 않아요.');
+        await prepareKakaoShare();
+        const share = await createShare('SETTLEMENT_REPORT', Number(id), participantId);
+        openKakaoShare(share);
+        await confirmReportSend(id);
+        back();
+      }}
     />
   );
 }
