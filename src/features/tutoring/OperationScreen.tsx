@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ListFooter } from '@/components/ListFooter';
 import { Chip } from '@/components/Chip';
 import { TextInput } from '@/components/TextInput';
 import { primitive } from '@/styles/colors';
@@ -57,16 +58,7 @@ export function OperationScreen() {
         canProceed={valid}
         submitting={false}
         onNext={() => setModal(true)}
-        beforeAction={
-          <Pressable
-            role="button"
-            accessibilityLabel="운영 방식 건너뛰기"
-            onPress={skip}
-            style={s.skip}
-          >
-            <Text style={s.skipText}>건너뛰기</Text>
-          </Pressable>
-        }
+        beforeAction={<ListFooter accessibilityLabel="운영 방식 건너뛰기" onPress={skip} />}
       >
         <View style={s.intro}>
           <Text role="heading" style={s.title}>
@@ -229,6 +221,4 @@ const s = StyleSheet.create({
   choiceTextSelected: { color: blue[500] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   custom: { marginTop: 12, gap: 8 },
-  skip: { minHeight: 40, alignItems: 'center', justifyContent: 'center' },
-  skipText: { fontSize: 12, lineHeight: 18, color: gray[350], textDecorationLine: 'underline' },
 });
