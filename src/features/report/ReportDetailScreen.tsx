@@ -29,33 +29,26 @@ export type ReportDetailScreenProps = {
   onBack: () => void;
   /** 카톡으로 보내기. 보낼 코멘트를 함께 넘깁니다. */
   onSend: (comment: string) => void;
-  /** 초안 다시 만들기. 새 초안을 돌려주면 입력칸을 바꿉니다. */
-  onRegenerate?: () => Promise<string> | string;
   /** 교육비 수정 저장. 없으면 "수정"을 누를 수 없습니다. */
   onSaveFee?: (edit: FeeEdit, signal: AbortSignal) => Promise<void>;
 };
 
 /** T-14 정산 리포트 상세. 발송 완료 리포트는 읽기 전용으로 보여 줍니다. */
-export function ReportDetailScreen({
-  report,
-  onBack,
-  onSend,
-  onRegenerate,
-  onSaveFee,
-}: ReportDetailScreenProps) {
+export function ReportDetailScreen({ report, onBack, onSend, onSaveFee }: ReportDetailScreenProps) {
   const readOnly = report.status === 'sent';
   const [comment, setComment] = useState(report.comment.draft);
   const [editing, setEditing] = useState(false);
   const [checked, setChecked] = useState(false);
   const [softenedOpen, setSoftenedOpen] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
+  // 한 번이라도 "수정 완료"를 눌렀으면 링크가 "다시 고치기"로 바뀝니다.
+  const [edited, setEdited] = useState(false);
   const [feeTotal, setFeeTotal] = useState(report.fee.total);
   const [feeSheetOpen, setFeeSheetOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const blurredAt = useRef(0);
   const { stats } = report;
   const fee = { ...report.fee, total: feeTotal };
-  const canSend = checked && !regenerating && comment.trim().length > 0;
+  const canSend = checked && comment.trim().length > 0;
 
   useEffect(() => {
     if (!toast) return;
@@ -63,36 +56,25 @@ export function ReportDetailScreen({
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const regenerate = async () => {
-    if (!onRegenerate || regenerating) return;
-    setRegenerating(true);
-    try {
-      setComment(await onRegenerate());
-      // 새 초안은 다시 확인해야 보낼 수 있습니다.
-      setChecked(false);
-    } finally {
-      setRegenerating(false);
-    }
-  };
-
   const toggleChecked = () => {
     const next = !checked;
     setChecked(next);
     setToast(next ? '코멘트를 확인했어요' : null);
   };
 
-  // 편집 중이면 "수정 완료", 문장 보기를 펼쳤으면 "다시 고치기", 아니면 "초안 다시 만들기"
+  /**
+   * 코멘트는 링크로만 고칩니다.
+   * "초안 다시 만들기" → 입력칸이 열리고 → "수정 완료" → 이후에는 "다시 고치기"로 다시 열 수 있습니다.
+   */
   const commentLink = editing
     ? { label: '수정 완료', action: () => Keyboard.dismiss() }
     : {
-        label: softenedOpen ? '다시 고치기' : '초안 다시 만들기',
-        action:
-          onRegenerate && !regenerating
-            ? () => {
-                if (Date.now() - blurredAt.current < BLUR_PRESS_GRACE_MS) return;
-                void regenerate();
-              }
-            : undefined,
+        label: edited ? '다시 고치기' : '초안 다시 만들기',
+        action: () => {
+          // "수정 완료"를 누를 때 생긴 blur 직후라면 입력칸을 다시 열지 않습니다.
+          if (Date.now() - blurredAt.current < BLUR_PRESS_GRACE_MS) return;
+          setEditing(true);
+        },
       };
 
   const helpText = !checked
@@ -182,29 +164,24 @@ export function ReportDetailScreen({
                     <LinkButton label={commentLink.label} onPress={commentLink.action} />
                   )}
                 </View>
-                {regenerating ? (
-                  <View
-                    role="progressbar"
-                    accessibilityLabel="코멘트 초안 만드는 중"
-                    aria-busy
-                    style={s.commentSkeleton}
-                  />
-                ) : (
-                  <TextInput
-                    accessibilityLabel="선생님 코멘트"
-                    value={readOnly ? report.comment.draft : comment}
-                    onChangeText={setComment}
-                    editable={!readOnly}
-                    onFocus={() => setEditing(true)}
-                    onBlur={() => {
-                      blurredAt.current = Date.now();
-                      setEditing(false);
-                    }}
-                    multiline
-                    scrollEnabled={false}
-                    textAlignVertical="top"
-                  />
-                )}
+                <TextInput
+                  // 편집을 시작하면 새로 그려서 바로 포커스(키보드)를 줍니다.
+                  key={editing ? 'editing' : 'view'}
+                  autoFocus={editing}
+                  accessibilityLabel="선생님 코멘트"
+                  value={readOnly ? report.comment.draft : comment}
+                  onChangeText={setComment}
+                  editable={!readOnly && editing}
+                  onBlur={() => {
+                    if (!editing) return;
+                    blurredAt.current = Date.now();
+                    setEditing(false);
+                    setEdited(true);
+                  }}
+                  multiline
+                  scrollEnabled={false}
+                  textAlignVertical="top"
+                />
               </View>
               {!readOnly && (
                 <Pressable
@@ -304,7 +281,7 @@ export function ReportDetailScreen({
 
           {!readOnly && (
             <View style={s.cta}>
-              {regenerating ? null : toast ? (
+              {toast ? (
                 <View style={s.toastSlot}>
                   <View role="status" accessibilityLiveRegion="polite" style={s.toast}>
                     <Text style={s.toastText}>{toast}</Text>
