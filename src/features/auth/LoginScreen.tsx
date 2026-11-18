@@ -91,14 +91,14 @@ export default function LoginScreen({ onLogin = startKakaoLogin }: Props) {
 
   return (
     <View style={s.root}>
-      <Image
-        source={gradientImage}
-        style={StyleSheet.absoluteFill}
-        contentFit="fill"
-        accessible={false}
-      />
-      <SafeAreaView style={s.safeArea}>
-        <View style={s.phone}>
+      <View style={s.frame}>
+        <Image
+          source={gradientImage}
+          style={StyleSheet.absoluteFill}
+          contentFit="fill"
+          accessible={false}
+        />
+        <SafeAreaView style={s.safeArea}>
           <ScrollView style={s.scroll} contentContainerStyle={s.body} bounces={false}>
             <View style={[s.spacer, { flexGrow: SPACE.top }]} />
             <View accessible accessibilityLabel="SUDAM" style={s.brand}>
@@ -142,17 +142,24 @@ export default function LoginScreen({ onLogin = startKakaoLogin }: Props) {
               )}
             </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
       <Loading visible={loading} />
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: semantic.surface.input },
-  safeArea: { flex: 1, alignItems: 'center' },
-  phone: { flex: 1, width: '100%', maxWidth: 390 },
+  // 탭 화면((tabs)/_layout)과 같이 넓은 화면에서는 폰 너비만 보이고 바깥은 회색으로 둡니다.
+  root: { flex: 1, alignItems: 'center', backgroundColor: '#f3f4f7' },
+  frame: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 390,
+    overflow: 'hidden',
+    backgroundColor: semantic.surface.input,
+  },
+  safeArea: { flex: 1 },
   scroll: { flex: 1 },
   // 화면이 아주 낮으면 여백이 최소값까지 줄어든 뒤 스크롤됩니다.
   body: { flexGrow: 1, alignItems: 'center' },
