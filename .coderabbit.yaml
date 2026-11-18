@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: ko-KR
+
+tone_instructions: '한국어로, 간결하고 친절하게 리뷰해 주세요. 근거가 약한 지적은 피하고, 실제 버그·접근성·성능 문제를 우선해 주세요.'
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  collapse_walkthrough: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    # 기본 브랜치(develop) 외에 main 대상 PR도 리뷰
+    base_branches:
+      - develop
+      - main
+
+  path_filters:
+    - '!dist/**'
+    - '!.expo/**'
+    - '!package-lock.json'
+    - '!**/*.svg'
+
+  path_instructions:
+    - path: 'src/app/**'
+      instructions: |
+        Expo Router 화면 파일입니다. 라우팅 구조, 화면 진입/이탈 시 상태 처리,
+        웹(react-native-web)과 네이티브 양쪽에서 동작하는지 확인해 주세요.
+    - path: 'src/**/*.{ts,tsx}'
+      instructions: |
+        React Native + TypeScript 코드입니다. 불필요한 리렌더, any 사용,
+        누락된 접근성 속성(accessibilityLabel/role), 하드코딩된 색상·간격
+        (constants/styles 토큰 대신)을 확인해 주세요.
+
+chat:
+  auto_reply: true
